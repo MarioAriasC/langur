@@ -147,6 +147,3 @@ object TokenType {
     "return" -> RETURN
   )
 }
-
-
-case class Token(tokenType: TokenType, literal: String)
