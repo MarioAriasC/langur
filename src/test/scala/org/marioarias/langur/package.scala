@@ -10,7 +10,7 @@ package org.marioarias
  *         Time: 1:57 PM
  */
 package object langur {
-  def isType[T](value: Any, block: T => Unit)(implicit ): Unit = {
+  def isType[T](value: Any, block: T => Unit): Unit = {
     value match {
       case t: T => block(t)
       case _ => fail(s"value is not ${Class[T].getClass.getSimpleName}. got=${value.getClass.getSimpleName}")
