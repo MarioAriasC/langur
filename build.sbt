@@ -1,17 +1,13 @@
-import scala.scalanative.build.{GC, LTO, Mode}
+val scala3Version = "3.1.1"
 
-scalaVersion := "2.13.7"
+lazy val root = project
+  .in(file("."))
+  .settings(
+    name := "langur",
+    version := "0.1.0-SNAPSHOT",
+    scalaVersion := scala3Version,
+    libraryDependencies += "com.lihaoyi" %% "utest" % "0.7.11" % "test",
+    //    libraryDependencies += "com.lihaoyi" %% "mainargs" % "0.2.2",
 
-// Set to false or remove if you want to show stubs as linking errors
-nativeLinkStubs := true
-
-enablePlugins(ScalaNativePlugin)
-
-libraryDependencies += "com.lihaoyi" %%% "utest" % "0.7.10" % "test"
-libraryDependencies += "com.lihaoyi" %%% "mainargs" % "0.2.2"
-
-testFrameworks += new TestFramework("utest.runner.Framework")
-
-nativeConfig ~= {
-  _.withLTO(LTO.thin).withMode(Mode.releaseFast).withGC(GC.commix)
-}
+    testFrameworks += new TestFramework("utest.runner.Framework")
+  )
