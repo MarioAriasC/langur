@@ -2,6 +2,9 @@ package org.marioarias
 
 
 
+import scala.reflect.{ClassTag, classTag}
+
+
 /**
  * Created by IntelliJ IDEA.
  *
@@ -10,10 +13,10 @@ package org.marioarias
  *         Time: 1:57 PM
  */
 package object langur {
-  def isType[T](value: Any, block: T => Unit): Unit = {
+  def isType[T : ClassTag](value: Any, block: T => Unit): Unit = {
     value match {
       case t: T => block(t)
-      case _ => fail(s"value is not ${Class[T].getClass.getSimpleName}. got=${value.getClass.getSimpleName}")
+      case _ => fail(s"value is not ${classTag[T].getClass.getSimpleName}. got=${value.getClass.getSimpleName}")
     }
   }
 

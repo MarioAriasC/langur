@@ -1,8 +1,9 @@
 package org.marioarias.langur.lexer
 
 import org.marioarias.langur.lexer.Lexer.{whiteSpaces, zeroChar}
-import org.marioarias.langur.token._
-import org.marioarias.langur.utils.Utils._
+import org.marioarias.langur.token.TokenType.*
+import org.marioarias.langur.token.{Token, TokenType}
+import org.marioarias.langur.utils.Utils.*
 
 import scala.language.implicitConversions
 import scala.util.control.Breaks.{break, breakable}
@@ -121,15 +122,14 @@ class Lexer(input: String) {
     }
   }
 
-  implicit private class CharIdentifier(ch: Char) {
+  extension (ch: Char)
     def isIdentifier: Boolean = ch.isLetter || ch == '_'
-  }
 
-  implicit private class Tokens(tokenType: TokenType) {
+  extension (tokenType: TokenType) {
     def token(): Token = Token(tokenType, ch.toString)
   }
 
-  implicit private class Lookup(value: String) {
+  extension (value: String) {
     def lookupIdent(): TokenType = {
       TokenType.keywords.get(value) match {
         case Some(tokenType) => tokenType

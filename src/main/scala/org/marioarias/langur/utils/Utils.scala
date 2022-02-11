@@ -11,10 +11,9 @@ import scala.language.implicitConversions
  */
 object Utils {
 
-  implicit class Also[T](t: T) {
+  extension[T] (t: T)
     def also(body: T => Unit): T = {
       body(t)
       t
     }
-  }
 }

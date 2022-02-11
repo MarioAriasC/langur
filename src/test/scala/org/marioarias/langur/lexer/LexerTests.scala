@@ -1,6 +1,7 @@
 package org.marioarias.langur.lexer
 
-import org.marioarias.langur.token._
+import org.marioarias.langur.token.*
+import org.marioarias.langur.token.TokenType._
 import utest.{ArrowAssert, TestSuite, Tests, test}
 
 /**
