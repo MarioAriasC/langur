@@ -9,10 +9,10 @@ import scala.language.implicitConversions
 import scala.util.control.Breaks.{break, breakable}
 
 /** Created by IntelliJ IDEA.
- *
- * @author
- * Mario Arias Date: 31/1/22 Time: 7:35 PM
- */
+  *
+  * @author
+  *   Mario Arias Date: 31/1/22 Time: 7:35 PM
+  */
 class Lexer(input: String) {
   private var position = 0
   private var readPosition = 0
@@ -59,10 +59,10 @@ class Lexer(input: String) {
 
   def nextToken(): Token = {
     def endsWithEqual(
-                       oneChar: TokenType,
-                       twoChars: TokenType,
-                       duplicateChars: Boolean = true
-                     ) = {
+        oneChar: TokenType,
+        twoChars: TokenType,
+        duplicateChars: Boolean = true
+    ) = {
       if (peakChar() == '=') {
         val currentChar = ch
         readChar()
@@ -81,24 +81,24 @@ class Lexer(input: String) {
     var readNextChar = true
 
     (ch match {
-      case '=' => endsWithEqual(ASSIGN, EQ)
-      case ';' => SEMICOLON.token()
-      case ':' => COLON.token()
-      case ',' => COMMA.token()
-      case '(' => LPAREN.token()
-      case ')' => RPAREN.token()
-      case '{' => LBRACE.token()
-      case '}' => RBRACE.token()
-      case '[' => LBRACKET.token()
-      case ']' => RBRACKET.token()
-      case '+' => PLUS.token()
-      case '-' => MINUS.token()
-      case '*' => ASTERISK.token()
-      case '/' => SLASH.token()
-      case '<' => LT.token()
-      case '>' => GT.token()
-      case '!' => endsWithEqual(BANG, NOT_EQ, duplicateChars = false)
-      case '"' => Token(STRING, readString())
+      case '='            => endsWithEqual(ASSIGN, EQ)
+      case ';'            => SEMICOLON.token()
+      case ':'            => COLON.token()
+      case ','            => COMMA.token()
+      case '('            => LPAREN.token()
+      case ')'            => RPAREN.token()
+      case '{'            => LBRACE.token()
+      case '}'            => RBRACE.token()
+      case '['            => LBRACKET.token()
+      case ']'            => RBRACKET.token()
+      case '+'            => PLUS.token()
+      case '-'            => MINUS.token()
+      case '*'            => ASTERISK.token()
+      case '/'            => SLASH.token()
+      case '<'            => LT.token()
+      case '>'            => GT.token()
+      case '!'            => endsWithEqual(BANG, NOT_EQ, duplicateChars = false)
+      case '"'            => Token(STRING, readString())
       case Lexer.zeroChar => Token(EOF, "")
       case _ =>
         if (ch.isIdentifier) {
@@ -124,19 +124,19 @@ class Lexer(input: String) {
     }
   }
 
-  extension (ch: Char) {
+  extension(ch: Char) {
     def isIdentifier: Boolean = ch.isLetter || ch == '_'
   }
 
-  extension (tokenType: TokenType) {
+  extension(tokenType: TokenType) {
     def token(): Token = Token(tokenType, ch.toString)
   }
 
-  extension (value: String) {
+  extension(value: String) {
     def lookupIdent(): TokenType = {
       TokenType.keywords.get(value) match {
         case Some(tokenType) => tokenType
-        case None => IDENT
+        case None            => IDENT
       }
     }
   }
