@@ -7,7 +7,7 @@ package org.marioarias.langur.token
  *         Date: 31/1/22
  *         Time: 8:21 PM
  */
-enum TokenType(val value: String):
+enum TokenType(val value: String) {
   case ILLEGAL extends TokenType("ILLEGAL")
   case EOF extends TokenType("EOF")
   case ASSIGN extends TokenType("=")
@@ -39,8 +39,9 @@ enum TokenType(val value: String):
   case ELSE extends TokenType("ELSE")
   case RETURN extends TokenType("RETURN")
   case STRING extends TokenType("STRING")
+}
 
-object TokenType:
+object TokenType {
   val keywords = Map(
     "fn" -> FUNCTION,
     "let" -> LET,
@@ -50,3 +51,4 @@ object TokenType:
     "else" -> ELSE,
     "return" -> RETURN
   )
+}
