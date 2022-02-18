@@ -47,3 +47,7 @@ class BlockStatement(override val token: Token, val statements: Option[List[Opti
 class PrefixExpression(override val token: Token, val operator: String, val right: Option[Expression]) extends NodeAdapter with ExpressionWithToken {
   override def toString: String = s"($operator$right)"
 }
+
+class InfixExpression(override val token: Token, val left: Option[Expression], val operator: String, val right: Option[Expression]) extends NodeAdapter with ExpressionWithToken {
+  override def toString: String = s"($left $operator $right)"
+}

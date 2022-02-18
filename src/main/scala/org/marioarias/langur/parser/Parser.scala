@@ -36,7 +36,16 @@ class Parser(lexer: Lexer) {
     TokenType.BANG -> parsePrefixExpression,
     TokenType.MINUS -> parsePrefixExpression
   )
-  private val infixParsers = Map[TokenType, Option[Expression] => Option[Expression]]()
+  private val infixParsers = Map[TokenType, Option[Expression] => Option[Expression]](
+    TokenType.PLUS -> parseInfixExpression,
+    TokenType.MINUS -> parseInfixExpression,
+    TokenType.SLASH -> parseInfixExpression,
+    TokenType.ASTERISK -> parseInfixExpression,
+    TokenType.EQ -> parseInfixExpression,
+    TokenType.NOT_EQ -> parseInfixExpression,
+    TokenType.LT -> parseInfixExpression,
+    TokenType.GT -> parseInfixExpression,
+  )
 
   private val precedences = Map(
     TokenType.EQ -> Precedence.EQUALS,
@@ -103,7 +112,7 @@ class Parser(lexer: Lexer) {
       case Some(literal: FunctionLiteral) => literal.name = name.value
       case _ =>
     }
-    
+
     if (peekTokenIs(TokenType.SEMICOLON)) {
       nextToken()
     }
@@ -178,12 +187,20 @@ class Parser(lexer: Lexer) {
     Some(PrefixExpression(token, operator, right))
   }
 
+  private def parseInfixExpression(left: Option[Expression]): Option[Expression] = {
+    val token = curToken
+    val operator = token.literal
+    val precedence = curPrecedence()
+    nextToken()
+    val right = parseExpression(precedence)
+    Some(InfixExpression(token, left, operator, right))
+  }
+
   private def peekPrecedence(): Precedence = findPrecedence(peekToken.tokenType)
 
-  private def findPrecedence(tokenType: TokenType): Precedence = {
-    val precedence = precedences.get(tokenType)
-    precedence.getOrElse(Precedence.LOWEST)
-  }
+  private def curPrecedence(): Precedence = findPrecedence(curToken.tokenType)
+
+  private def findPrecedence(tokenType: TokenType): Precedence = precedences.getOrElse(tokenType, Precedence.LOWEST)
 
   private def noPrefixParserError(tokenType: TokenType): Unit = innerErrors += s"no prefix parser for $tokenType type"
 

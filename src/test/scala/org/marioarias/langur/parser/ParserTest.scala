@@ -88,6 +88,28 @@ object ParserTest extends TestSuite {
         }
       }
     }
+
+    test("parsing infix expressions") {
+      List(
+        ("5 + 5;", 5, "+", 5),
+        ("5 - 5;", 5, "-", 5),
+        ("5 * 5;", 5, "*", 5),
+        ("5 / 5;", 5, "/", 5),
+        ("5 > 5;", 5, ">", 5),
+        ("5 < 5;", 5, "<", 5),
+        ("5 == 5;", 5, "==", 5),
+        ("5 != 5;", 5, "!=", 5),
+        ("true == true", true, "==", true),
+        ("true != false", true, "!=", false),
+        ("false == false", false, "==", false)
+      ).foreach { case (input, leftValue, operator, rightValue) =>
+        val program = createProgram(input)
+        countStatements(1, program)
+        checkType(program.statements.head) { (statement: ExpressionStatement) =>
+          testInfixExpression(statement.expression, leftValue, operator, rightValue)
+        }
+      }
+    }
   }
 
   private def createProgram(input: String): Program = {
@@ -159,6 +181,15 @@ object ParserTest extends TestSuite {
       val exp = maybe.value
       exp.value ==> s
       exp.tokenLiteral() ==> s
+    }
+  }
+
+  private def testInfixExpression[T](expression: Option[Expression], leftValue: T, operator: String, rightValue: T): Unit = {
+    checkType(expression) { (maybe: Some[InfixExpression]) =>
+      val exp = maybe.value
+      testLiteralExpression(exp.left, leftValue)
+      exp.operator ==> operator
+      testLiteralExpression(exp.right, rightValue)
     }
   }
 }
