@@ -25,6 +25,7 @@ trait LiteralExpression[T](override val token: Token, val value: T) extends Node
   override def toString: String = token.literal
 
 class IntegerLiteral(token: Token, value: Long) extends LiteralExpression[Long](token, value)
+
 class BooleanLiteral(token: Token, value: Boolean) extends LiteralExpression[Boolean](token, value)
 
 class FunctionLiteral(override val token: Token, val parameters: Option[List[Identifier]], val body: Option[BlockStatement], var name: String = "") extends NodeAdapter with ExpressionWithToken {
@@ -41,4 +42,8 @@ class ReturnStatement(override val token: Token, val returnValue: Option[Express
 
 class BlockStatement(override val token: Token, val statements: Option[List[Option[Statement]]]) extends NodeAdapter with StatementWithToken {
   override def toString: String = statements.getOrElse(List.empty).map(_.map(_.toString).getOrElse("")).mkString("")
+}
+
+class PrefixExpression(override val token: Token, val operator: String, val right: Option[Expression]) extends NodeAdapter with ExpressionWithToken {
+  override def toString: String = s"($operator$right)"
 }

@@ -32,7 +32,9 @@ class Parser(lexer: Lexer) {
     TokenType.INT -> parseIntegerLiteral,
     TokenType.TRUE -> parseBooleanLiteral,
     TokenType.FALSE -> parseBooleanLiteral,
-    TokenType.IDENT -> parseIdentifier
+    TokenType.IDENT -> parseIdentifier,
+    TokenType.BANG -> parsePrefixExpression,
+    TokenType.MINUS -> parsePrefixExpression
   )
   private val infixParsers = Map[TokenType, Option[Expression] => Option[Expression]]()
 
@@ -101,8 +103,7 @@ class Parser(lexer: Lexer) {
       case Some(literal: FunctionLiteral) => literal.name = name.value
       case _ =>
     }
-
-
+    
     if (peekTokenIs(TokenType.SEMICOLON)) {
       nextToken()
     }
@@ -168,6 +169,14 @@ class Parser(lexer: Lexer) {
   private def parseBooleanLiteral() = Some(BooleanLiteral(curToken, curTokenIs(TokenType.TRUE)))
 
   private def parseIdentifier() = Some(Identifier(curToken, curToken.literal))
+
+  private def parsePrefixExpression() = {
+    val token = curToken
+    val operator = token.literal
+    nextToken()
+    val right = parseExpression(Precedence.PREFIX)
+    Some(PrefixExpression(token, operator, right))
+  }
 
   private def peekPrecedence(): Precedence = findPrecedence(peekToken.tokenType)
 

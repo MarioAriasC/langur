@@ -8,7 +8,7 @@ import scala.reflect.{ClassTag, classTag}
   *   Mario Arias Date: 1/2/22 Time: 1:57 PM
   */
 package object langur {
-  def isType[T: ClassTag](value: Any)(block: T => Unit): Unit = {
+  def checkType[T: ClassTag](value: Any)(block: T => Unit): Unit = {
     value match {
       case t: T => block(t)
       case _ =>
