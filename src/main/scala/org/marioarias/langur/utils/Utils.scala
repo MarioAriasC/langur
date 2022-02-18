@@ -1,19 +1,16 @@
 package org.marioarias.langur.utils
 
-import scala.language.implicitConversions
-
-/**
- * Created by IntelliJ IDEA.
- *
- * @author Mario Arias
- *         Date: 1/2/22
- *         Time: 10:12 AM
- */
+/** Created by IntelliJ IDEA.
+  *
+  * @author
+  *   Mario Arias Date: 1/2/22 Time: 10:12 AM
+  */
 object Utils {
 
-  extension[T] (t: T)
+  extension[T](t: T) {
     def also(body: T => Unit): T = {
       body(t)
       t
     }
+  }
 }

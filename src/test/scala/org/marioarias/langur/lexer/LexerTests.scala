@@ -4,13 +4,11 @@ import org.marioarias.langur.token.*
 import org.marioarias.langur.token.TokenType._
 import utest.{ArrowAssert, TestSuite, Tests, test}
 
-/**
- * Created by IntelliJ IDEA.
- *
- * @author Mario Arias
- *         Date: 1/2/22
- *         Time: 11:14 AM
- */
+/** Created by IntelliJ IDEA.
+  *
+  * @author
+  *   Mario Arias Date: 1/2/22 Time: 11:14 AM
+  */
 object LexerTests extends TestSuite {
   override def tests: Tests = Tests {
     test("validate lexer") {

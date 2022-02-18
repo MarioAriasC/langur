@@ -8,12 +8,10 @@ import org.marioarias.langur.utils.Utils.*
 import scala.language.implicitConversions
 import scala.util.control.Breaks.{break, breakable}
 
-/**
- * Created by IntelliJ IDEA.
+/** Created by IntelliJ IDEA.
  *
- * @author Mario Arias
- *         Date: 31/1/22
- *         Time: 7:35 PM
+ * @author
+ * Mario Arias Date: 31/1/22 Time: 7:35 PM
  */
 class Lexer(input: String) {
   private var position = 0
@@ -51,7 +49,7 @@ class Lexer(input: String) {
     breakable {
       while (true) {
         readChar()
-        if (ch == '"' || ch == 0.toChar) {
+        if (ch == '"' || ch == zeroChar) {
           break
         }
       }
@@ -60,7 +58,11 @@ class Lexer(input: String) {
   }
 
   def nextToken(): Token = {
-    def endsWithEqual(oneChar: TokenType, twoChars: TokenType, duplicateChars: Boolean = true) = {
+    def endsWithEqual(
+                       oneChar: TokenType,
+                       twoChars: TokenType,
+                       duplicateChars: Boolean = true
+                     ) = {
       if (peakChar() == '=') {
         val currentChar = ch
         readChar()
@@ -122,8 +124,9 @@ class Lexer(input: String) {
     }
   }
 
-  extension (ch: Char)
+  extension (ch: Char) {
     def isIdentifier: Boolean = ch.isLetter || ch == '_'
+  }
 
   extension (tokenType: TokenType) {
     def token(): Token = Token(tokenType, ch.toString)
@@ -138,8 +141,8 @@ class Lexer(input: String) {
     }
   }
 
-
-  override def toString = s"Lexer(input=$input position=$position, readPosition=$readPosition, ch=$ch)"
+  override def toString =
+    s"Lexer(input=$input position=$position, readPosition=$readPosition, ch=$ch)"
 }
 
 object Lexer {

@@ -2,13 +2,11 @@ package org.marioarias.langur.ast
 
 import org.marioarias.langur.token.Token
 
-/**
- * Created by IntelliJ IDEA.
- *
- * @author Mario Arias
- *         Date: 1/2/22
- *         Time: 1:23 PM
- */
+/** Created by IntelliJ IDEA.
+  *
+  * @author
+  *   Mario Arias Date: 1/2/22 Time: 1:23 PM
+  */
 trait Node {
   def tokenLiteral(): String
 
