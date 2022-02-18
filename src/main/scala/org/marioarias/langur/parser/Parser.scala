@@ -36,7 +36,8 @@ class Parser(lexer: Lexer) {
     TokenType.BANG -> parsePrefixExpression,
     TokenType.MINUS -> parsePrefixExpression,
     TokenType.LPAREN -> parseGroupExpression,
-    TokenType.LBRACKET -> parseArrayLiteral
+    TokenType.LBRACKET -> parseArrayLiteral,
+    TokenType.IF -> parseIfExpression
   )
   private val infixParsers = Map[TokenType, Option[Expression] => Option[Expression]](
     TokenType.PLUS -> parseInfixExpression,
@@ -257,6 +258,59 @@ class Parser(lexer: Lexer) {
     } else {
       Some(IndexExpression(token, left, index))
     }
+  }
+
+  private def parseIfExpression(): Option[Expression] = {
+    val token = curToken
+
+    if (!expectPeek(TokenType.LPAREN)) {
+      return None
+    }
+
+    nextToken()
+
+    val condition = parseExpression(Precedence.LOWEST)
+
+    if (!expectPeek(TokenType.RPAREN)) {
+      return None
+    }
+
+    if (!expectPeek(TokenType.LBRACE)) {
+      return None
+    }
+
+    val consequence = parseBlockStatement()
+
+    val alternative = if (peekTokenIs(TokenType.ELSE)) {
+      nextToken()
+
+      if (!expectPeek(TokenType.LBRACE)) {
+        return None
+      }
+      Some(parseBlockStatement())
+    } else {
+      None
+    }
+
+    Some(IfExpression(token, condition, Some(consequence), alternative))
+  }
+
+  private def parseBlockStatement(): BlockStatement = {
+    val token = curToken
+
+    val statements = mutable.ListBuffer.empty[Option[Statement]]
+
+    nextToken()
+
+    while (!curTokenIs(TokenType.RBRACE) && !curTokenIs(TokenType.EOF)) {
+      val statement = parseStatement()
+      if (statement.isDefined) {
+        statements += statement
+      }
+      nextToken()
+    }
+
+    BlockStatement(token, Some(statements.toList))
   }
 
   private def peekPrecedence(): Precedence = findPrecedence(peekToken.tokenType)

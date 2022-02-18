@@ -64,6 +64,10 @@ class IndexExpression(override val token: Token, val left: Option[Expression], v
   override def toString: String = s"(${left.debug()}[${index.debug()}])"
 }
 
+class IfExpression(override val token: Token, val condition: Option[Expression], val consequence: Option[BlockStatement], val alternative: Option[BlockStatement]) extends NodeAdapter with ExpressionWithToken {
+  override def toString: String = s"if${condition.debug()} ${consequence.debug()} ${alternative.map(alt => s"else $alt").getOrElse("")}"
+}
+
 extension[T] (exp: Option[T]) {
   def debug(): String = exp.map(_.toString).getOrElse("")
 }

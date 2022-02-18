@@ -226,6 +226,45 @@ object ParserTest extends TestSuite {
         program.toString ==> expected
       }
     }
+
+    test("boolean expression") {
+      List(
+        ("true", true),
+        ("false", false)
+      ).foreach { case (input, expectedBoolean) =>
+        val program = createProgram(input)
+        countStatements(1, program)
+        checkType(program.statements.head) { (statement: ExpressionStatement) =>
+          checkType(statement.expression) { (maybe: Some[BooleanLiteral]) =>
+            val boolean = maybe.value
+            boolean.value ==> expectedBoolean
+          }
+        }
+      }
+    }
+
+    test("if expression") {
+      val input = "if (x < y) { x }"
+      val program = createProgram(input)
+
+      countStatements(1, program)
+
+      checkType(program.statements.head) { (statement: ExpressionStatement) =>
+        checkType(statement.expression) { (maybe: Some[IfExpression]) =>
+          val exp = maybe.value
+          testInfixExpression(exp.condition, "x", "<", "y")
+          for consequence <- exp.consequence yield {
+            consequence.statements.size ==> 1
+            for statements <- consequence.statements yield {
+              checkType(statements.head) { (maybe : Some[ExpressionStatement]) =>
+                val consequence = maybe.value
+                consequence.expression ==> Some("x")
+              }
+            }
+          }
+        }
+      }
+    }
   }
 
   private def createProgram(input: String): Program = {
