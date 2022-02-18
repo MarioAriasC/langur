@@ -34,7 +34,9 @@ class Parser(lexer: Lexer) {
     TokenType.FALSE -> parseBooleanLiteral,
     TokenType.IDENT -> parseIdentifier,
     TokenType.BANG -> parsePrefixExpression,
-    TokenType.MINUS -> parsePrefixExpression
+    TokenType.MINUS -> parsePrefixExpression,
+    TokenType.LPAREN -> parseGroupExpression,
+    TokenType.LBRACKET -> parseArrayLiteral
   )
   private val infixParsers = Map[TokenType, Option[Expression] => Option[Expression]](
     TokenType.PLUS -> parseInfixExpression,
@@ -45,6 +47,8 @@ class Parser(lexer: Lexer) {
     TokenType.NOT_EQ -> parseInfixExpression,
     TokenType.LT -> parseInfixExpression,
     TokenType.GT -> parseInfixExpression,
+    TokenType.LPAREN -> parseCallExpression,
+    TokenType.LBRACKET -> parseIndexExpression
   )
 
   private val precedences = Map(
@@ -194,6 +198,65 @@ class Parser(lexer: Lexer) {
     nextToken()
     val right = parseExpression(precedence)
     Some(InfixExpression(token, left, operator, right))
+  }
+
+  private def parseGroupExpression(): Option[Expression] = {
+    nextToken()
+    val exp = parseExpression(Precedence.LOWEST)
+
+    if (!expectPeek(TokenType.RPAREN)) {
+      None
+    } else {
+      exp
+    }
+  }
+
+  private def parseCallExpression(expression: Option[Expression]): Option[Expression] = {
+    val token = curToken
+    val arguments = parseExpressionList(TokenType.RPAREN)
+    Some(CallExpression(token, expression, arguments))
+  }
+
+  private def parseExpressionList(end: TokenType): Option[List[Option[Expression]]] = {
+    val arguments = mutable.ListBuffer.empty[Option[Expression]]
+
+    if (peekTokenIs(end)) {
+      nextToken()
+      return Some(arguments.toList)
+    }
+
+    nextToken()
+    arguments += parseExpression(Precedence.LOWEST)
+
+    while (peekTokenIs(TokenType.COMMA)) {
+      nextToken()
+      nextToken()
+      arguments += parseExpression(Precedence.LOWEST)
+    }
+
+    if (!expectPeek(end)) {
+      None
+    } else {
+      Some(arguments.toList)
+    }
+  }
+
+  private def parseArrayLiteral(): Option[Expression] = {
+    val token = curToken
+    Some(ArrayLiteral(token, parseExpressionList(TokenType.RBRACKET)))
+  }
+
+  private def parseIndexExpression(left: Option[Expression]): Option[Expression] = {
+    val token = curToken
+    nextToken()
+
+    val index = parseExpression(Precedence.LOWEST)
+
+    if (!expectPeek(TokenType.RBRACKET)) {
+      None
+    } else {
+      Some(IndexExpression(token, left, index))
+    }
   }
 
   private def peekPrecedence(): Precedence = findPrecedence(peekToken.tokenType)

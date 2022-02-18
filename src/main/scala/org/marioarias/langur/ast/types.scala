@@ -45,9 +45,33 @@ class BlockStatement(override val token: Token, val statements: Option[List[Opti
 }
 
 class PrefixExpression(override val token: Token, val operator: String, val right: Option[Expression]) extends NodeAdapter with ExpressionWithToken {
-  override def toString: String = s"($operator$right)"
+  override def toString: String = s"($operator${right.debug()})"
 }
 
 class InfixExpression(override val token: Token, val left: Option[Expression], val operator: String, val right: Option[Expression]) extends NodeAdapter with ExpressionWithToken {
-  override def toString: String = s"($left $operator $right)"
+  override def toString: String = s"(${left.debug()} $operator ${right.debug()})"
+}
+
+class CallExpression(override val token: Token, val function: Option[Expression], val arguments: Option[List[Option[Expression]]]) extends NodeAdapter with ExpressionWithToken {
+  override def toString: String = s"${function.debug()}(${arguments.debugList()})"
+}
+
+class ArrayLiteral(override val token: Token, val elements: Option[List[Option[Expression]]]) extends NodeAdapter with ExpressionWithToken {
+  override def toString: String = s"[${elements.debugList()}]"
+}
+
+class IndexExpression(override val token: Token, val left: Option[Expression], val index: Option[Expression]) extends NodeAdapter with ExpressionWithToken {
+  override def toString: String = s"(${left.debug()}[${index.debug()}])"
+}
+
+extension[T] (exp: Option[T]) {
+  def debug(): String = exp.map(_.toString).getOrElse("")
+}
+
+extension[T] (maybeList: Option[List[Option[T]]]) {
+  def debugList(): String = maybeList.map { list =>
+    list.map { maybe =>
+      maybe.debug()
+    }
+  }.getOrElse(List.empty).mkString(", ")
 }
