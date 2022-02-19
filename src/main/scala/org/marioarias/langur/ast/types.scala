@@ -33,7 +33,7 @@ class FunctionLiteral(override val token: Token, val parameters: Option[List[Ide
 }
 
 class ExpressionStatement(override val token: Token, val expression: Option[Expression]) extends NodeAdapter with StatementWithToken {
-  override def toString: String = expression.map(_.toString).getOrElse("")
+  override def toString: String = expression.debug()
 }
 
 class ReturnStatement(override val token: Token, val returnValue: Option[Expression]) extends NodeAdapter with StatementWithToken {
@@ -66,6 +66,14 @@ class IndexExpression(override val token: Token, val left: Option[Expression], v
 
 class IfExpression(override val token: Token, val condition: Option[Expression], val consequence: Option[BlockStatement], val alternative: Option[BlockStatement]) extends NodeAdapter with ExpressionWithToken {
   override def toString: String = s"if${condition.debug()} ${consequence.debug()} ${alternative.map(alt => s"else $alt").getOrElse("")}"
+}
+
+class StringLiteral(override val token: Token, val value: String) extends NodeAdapter with ExpressionWithToken {
+  override def toString: String = value
+}
+
+class HashLiteral(override val token: Token, val pairs: Map[Expression, Expression]) extends NodeAdapter with ExpressionWithToken {
+  override def toString: String = s"{${pairs.keys.map(key => s"$key:${pairs(key)}")}}"
 }
 
 extension[T] (exp: Option[T]) {

@@ -48,8 +48,7 @@ object ParserTest extends TestSuite {
       val program = createProgram(input)
       countStatements(1, program)
       checkType(program.statements.head) { (statement: ExpressionStatement) =>
-        checkType(statement.expression) { (maybe: Some[Identifier]) =>
-          val identifier = maybe.value
+        checkType(statement.expression) { (identifier: Identifier) =>
           identifier.value ==> "foobar"
           identifier.tokenLiteral() ==> "foobar"
         }
@@ -80,8 +79,7 @@ object ParserTest extends TestSuite {
         val program = createProgram(input)
         countStatements(1, program)
         checkType(program.statements.head) { (statement: ExpressionStatement) =>
-          checkType(statement.expression) { (maybe: Some[PrefixExpression]) =>
-            val expression = maybe.value
+          checkType(statement.expression) { (expression: PrefixExpression) =>
             expression.operator ==> operator
             testLiteralExpression(expression.right, value)
           }
@@ -235,8 +233,7 @@ object ParserTest extends TestSuite {
         val program = createProgram(input)
         countStatements(1, program)
         checkType(program.statements.head) { (statement: ExpressionStatement) =>
-          checkType(statement.expression) { (maybe: Some[BooleanLiteral]) =>
-            val boolean = maybe.value
+          checkType(statement.expression) { (boolean: BooleanLiteral) =>
             boolean.value ==> expectedBoolean
           }
         }
@@ -250,16 +247,149 @@ object ParserTest extends TestSuite {
       countStatements(1, program)
 
       checkType(program.statements.head) { (statement: ExpressionStatement) =>
-        checkType(statement.expression) { (maybe: Some[IfExpression]) =>
-          val exp = maybe.value
+        checkType(statement.expression) { (exp: IfExpression) =>
           testInfixExpression(exp.condition, "x", "<", "y")
           for consequence <- exp.consequence yield {
-            consequence.statements.size ==> 1
             for statements <- consequence.statements yield {
-              checkType(statements.head) { (maybe : Some[ExpressionStatement]) =>
-                val consequence = maybe.value
-                consequence.expression ==> Some("x")
+              statements.size ==> 1
+              checkType(statements.head) { (exp: ExpressionStatement) =>
+                testIdentifier(exp.expression, "x")
               }
+            }
+          }
+        }
+      }
+    }
+
+    test("if else expression") {
+      val input = "if (x < y) { x } else { y }"
+      val program = createProgram(input)
+
+      countStatements(1, program)
+
+      checkType(program.statements.head) { (statement: ExpressionStatement) =>
+        checkType(statement.expression) { (exp: IfExpression) =>
+          testInfixExpression(exp.condition, "x", "<", "y")
+
+          for consequence <- exp.consequence yield {
+            for statements <- consequence.statements yield {
+              statements.size ==> 1
+              checkType(statements.head) { (exp: ExpressionStatement) =>
+                testIdentifier(exp.expression, "x")
+              }
+            }
+          }
+
+          for alternative <- exp.alternative yield {
+            for statements <- alternative.statements yield {
+              statements.size ==> 1
+              checkType(statements.head) { (exp: ExpressionStatement) =>
+                testIdentifier(exp.expression, "y")
+              }
+            }
+          }
+        }
+      }
+    }
+
+    test("function literal parsing") {
+      val input = "fn(x, y) { x + y;}"
+      val program = createProgram(input)
+      countStatements(1, program)
+
+      checkType(program.statements.head) { (statement: ExpressionStatement) =>
+        checkType(statement.expression) { (function: FunctionLiteral) =>
+          for parameters <- function.parameters yield {
+            testLiteralExpression(Some(parameters.head), "x")
+            testLiteralExpression(Some(parameters(1)), "y")
+          }
+          for body <- function.body yield {
+            for statements <- body.statements yield {
+              statements.size ==> 1
+              checkType(statements.head) { (body: ExpressionStatement) =>
+                testInfixExpression(body.expression, "x", "+", "y")
+              }
+            }
+          }
+        }
+      }
+    }
+
+    test("call expression parsing") {
+      val input = "add(1, 2 * 3, 4+5)"
+
+      val program = createProgram(input)
+
+      countStatements(1, program)
+
+      checkType(program.statements.head) { (statement: ExpressionStatement) =>
+        checkType(statement.expression) { (exp: CallExpression) =>
+          testIdentifier(exp.function, "add")
+          for arguments <- exp.arguments yield {
+            arguments.size ==> 3
+            testLiteralExpression(arguments.head, 1)
+            testInfixExpression(arguments(1), 2, "*", 3)
+            testInfixExpression(arguments(2), 4, "+", 5)
+          }
+        }
+      }
+    }
+
+    test("string literal expression") {
+      val input = """"hello world";"""
+
+      val program = createProgram(input)
+
+      countStatements(1, program)
+
+      checkType(program.statements.head) { (statement: ExpressionStatement) =>
+        checkType(statement.expression) { (literal: StringLiteral) =>
+          literal.value ==> "hello world"
+        }
+      }
+    }
+
+    test("parsing array literal") {
+      val input = "[1, 2 * 2, 3 + 3]"
+
+      val program = createProgram(input)
+
+      checkType(program.statements.head) { (statement: ExpressionStatement) =>
+        checkType(statement.expression) { (array: ArrayLiteral) =>
+          for elements <- array.elements yield {
+            testLongLiteral(elements.head, 1)
+            testInfixExpression(elements(1), 2, "*", 2)
+            testInfixExpression(elements(2), 3, "+", 3)
+          }
+        }
+      }
+    }
+
+    test("parsing index expression") {
+      val input = "myArray[1 + 1]"
+
+      val program = createProgram(input)
+
+      checkType(program.statements.head) { (statement: ExpressionStatement) =>
+        checkType(statement.expression) { (index: IndexExpression) =>
+          testIdentifier(index.left, "myArray")
+          testInfixExpression(index.index, 1, "+", 1)
+        }
+      }
+    }
+
+    test("hash literal string keys") {
+      val input = """{"one": 1, "two": 2, "three": 3}"""
+      val program = createProgram(input)
+      checkType(program.statements.head) { (statement: ExpressionStatement) =>
+        checkType(statement.expression) { (hash: HashLiteral) =>
+          3 ==> hash.pairs.size
+          val expected = Map("one" -> 1, "two" -> 2, "three" -> 3)
+          
+          hash.pairs.foreach { case (key, value) =>
+            checkType(key) { (literal: StringLiteral) =>
+              val expectedValue = expected(literal.toString())
+              testLiteralExpression(Some(value), expectedValue)
             }
           }
         }
@@ -310,8 +440,7 @@ object ParserTest extends TestSuite {
   }
 
   private def testLongLiteral(expression: Option[Expression], l: Long): Unit = {
-    checkType(expression) { (maybe: Some[IntegerLiteral]) =>
-      val exp = maybe.value
+    checkType(expression) { (exp: IntegerLiteral) =>
       exp.value ==> l
       exp.tokenLiteral() ==> l.toString
     }
@@ -321,8 +450,7 @@ object ParserTest extends TestSuite {
                                   expression: Option[Expression],
                                   b: Boolean
                                 ): Unit = {
-    checkType(expression) { (maybe: Some[BooleanLiteral]) =>
-      val exp = maybe.value
+    checkType(expression) { (exp: BooleanLiteral) =>
       exp.value ==> b
       exp.tokenLiteral() ==> b.toString
     }
@@ -332,16 +460,14 @@ object ParserTest extends TestSuite {
                               expression: Option[Expression],
                               s: String
                             ): Unit = {
-    checkType(expression) { (maybe: Some[Identifier]) =>
-      val exp = maybe.value
+    checkType(expression) { (exp: Identifier) =>
       exp.value ==> s
       exp.tokenLiteral() ==> s
     }
   }
 
   private def testInfixExpression[T](expression: Option[Expression], leftValue: T, operator: String, rightValue: T): Unit = {
-    checkType(expression) { (maybe: Some[InfixExpression]) =>
-      val exp = maybe.value
+    checkType(expression) { (exp: InfixExpression) =>
       testLiteralExpression(exp.left, leftValue)
       exp.operator ==> operator
       testLiteralExpression(exp.right, rightValue)

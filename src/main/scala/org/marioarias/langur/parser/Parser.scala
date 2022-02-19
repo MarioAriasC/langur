@@ -37,7 +37,10 @@ class Parser(lexer: Lexer) {
     TokenType.MINUS -> parsePrefixExpression,
     TokenType.LPAREN -> parseGroupExpression,
     TokenType.LBRACKET -> parseArrayLiteral,
-    TokenType.IF -> parseIfExpression
+    TokenType.IF -> parseIfExpression,
+    TokenType.FUNCTION -> parseFunctionLiteral,
+    TokenType.STRING -> parseStringLiteral,
+    TokenType.LBRACE -> parseHashLiteral
   )
   private val infixParsers = Map[TokenType, Option[Expression] => Option[Expression]](
     TokenType.PLUS -> parseInfixExpression,
@@ -311,6 +314,81 @@ class Parser(lexer: Lexer) {
     }
 
     BlockStatement(token, Some(statements.toList))
+  }
+
+  private def parseFunctionLiteral(): Option[Expression] = {
+    val token = curToken
+    if (!expectPeek(TokenType.LPAREN)) {
+      return None
+    }
+
+    val parameters = parseFunctionParameters()
+
+    if (!expectPeek(TokenType.LBRACE)) {
+      return None
+    }
+
+    val body = parseBlockStatement()
+
+    Some(FunctionLiteral(token, parameters, Some(body)))
+  }
+
+  private def parseFunctionParameters(): Option[List[Identifier]] = {
+    val parameters = mutable.ListBuffer.empty[Identifier]
+
+    if (peekTokenIs(TokenType.RPAREN)) {
+      nextToken()
+      return Some(parameters.toList)
+    }
+    nextToken()
+
+    val token = curToken
+
+    parameters += Identifier(token, token.literal)
+
+    while (peekTokenIs(TokenType.COMMA)) {
+      nextToken()
+      nextToken()
+
+      val innerToken = curToken
+
+      parameters += Identifier(innerToken, innerToken.literal)
+    }
+
+    if (!expectPeek(TokenType.RPAREN)) {
+      return None
+    }
+
+    Some(parameters.toList)
+  }
+
+  private def parseStringLiteral() = Some(StringLiteral(curToken, curToken.literal))
+
+  private def parseHashLiteral(): Option[Expression] = {
+    val token = curToken
+    val pairs = mutable.HashMap.empty[Expression, Expression]
+    while (!peekTokenIs(TokenType.RBRACE)) {
+      nextToken()
+      val maybeKey = parseExpression(Precedence.LOWEST)
+      if (!expectPeek(TokenType.COLON)) {
+        return None
+      }
+      nextToken()
+      val maybeValue = parseExpression(Precedence.LOWEST)
+      for key <- maybeKey yield {
+        for value <- maybeValue yield {
+          pairs(key) = value
+        }
+      }
+      if (!peekTokenIs(TokenType.RBRACE) && !expectPeek(TokenType.COMMA)) {
+        return None
+      }
+    }
+    if (!expectPeek(TokenType.RBRACE)) {
+      None
+    } else {
+      Some(HashLiteral(token, pairs.toMap))
+    }
   }
 
   private def peekPrecedence(): Precedence = findPrecedence(peekToken.tokenType)
