@@ -10,7 +10,7 @@ import utest.{ArrowAssert, TestSuite, Tests, test}
  * @author
  * Mario Arias Date: 1/2/22 Time: 1:56 PM
  */
-object ParserTest extends TestSuite {
+object ParserTests extends TestSuite {
 
   override def tests: Tests = Tests {
     test("let statement") {
