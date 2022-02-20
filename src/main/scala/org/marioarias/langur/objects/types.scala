@@ -1,5 +1,8 @@
 package org.marioarias.langur.objects
 
+import org.marioarias.langur.ast._
+import org.marioarias.langur.evaluator.Environment
+
 trait MObject {
   def inspect(): String
 }
@@ -73,6 +76,10 @@ class MBoolean(value: Boolean) extends MValue[Boolean](value) with MHashable[Boo
 
 object MNull extends MObject {
   override def inspect(): String = "null"
+}
+
+class MFunction(val parameters: Option[List[Identifier]], val body: Option[BlockStatement], val env: Environment) extends MObject {
+  override def inspect(): String = s"fn(${parameters.map(_.map(_.toString)).getOrElse(List.empty).mkString(",")}) {\n\t${body.debug()}\n}"
 }
 
 extension (m: Option[MObject]) {

@@ -20,7 +20,9 @@ object EvaluatorTests extends TestSuite {
   extension (l: List[(String, Int)]) {
     def eval(): Unit = {
       l.foreach { case (input, expected) =>
+        println(input)
         val evaluated = testEval(input)
+        println(evaluated)
         testInteger(evaluated, expected.toLong)
       }
     }
@@ -104,6 +106,41 @@ object EvaluatorTests extends TestSuite {
           case None => evaluated ==> Some(Evaluator.NULL)
         }
       }
+    }
+
+    test("return statement") {
+      List(("return 10;", 10),
+        ("return 10; 9;", 10),
+        ("return 2 * 5; 9;", 10),
+        ("9; return 2 * 5; 9;", 10),
+        (
+          """
+          if (10 > 1) {
+            if (10 > 1) {
+              return 10;
+            }
+
+            return 1;
+          }
+          """, 10
+        ),
+        (
+          """
+          let f = fn(x) {
+            return x;
+            x + 10;
+          };
+          f(10);""", 10
+        ),
+        (
+          """
+          let f = fn(x) {
+             let result = x + 10;
+             return result;
+             return 10;
+          };
+          f(10);""", 20
+        )).eval()
     }
   }
 

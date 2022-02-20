@@ -35,6 +35,19 @@ object Evaluator {
       case b: BooleanLiteral => Some(b.value.toMonkey)
       case i: IfExpression => evalIfExpression(i, env)
       case b: BlockStatement => evalBlockStatement(b, env)
+      case r: ReturnStatement => eval(r.returnValue, env).ifNotError(value => Some(MReturnValue(value)))
+      case l: LetStatement => eval(l.value, env).ifNotError(value => Some(env.put(l.name.value, value)))
+      case f: FunctionLiteral => Some(MFunction(f.parameters, f.body, env))
+      case c: CallExpression =>
+        eval(c.function, env).ifNotError { function =>
+          val args = evalExpressions(c.arguments, env)
+          if (args.size == 1 && args.head.isError) {
+            args.head
+          } else {
+            applyFunction(function, args)
+          }
+        }
+      case i:Identifier => Some(evalIdentifier(i, env))
     }
   }
 
@@ -137,6 +150,58 @@ object Evaluator {
       }
     }
     result
+  }
+
+  extension (o: Option[MObject]) {
+    def isError: Boolean = o match {
+      case Some(e) => e.isInstanceOf[MError]
+      case None => false
+    }
+  }
+
+  private def evalExpressions(arguments: Option[List[Option[Expression]]], env: Environment): List[Option[MObject]] = {
+    arguments.map(_.map { argument =>
+      val evaluated = eval(argument, env)
+      if (evaluated.isError) {
+        return List(evaluated)
+      }
+      evaluated
+    }).getOrElse(List.empty)
+  }
+
+  private def applyFunction(function: MObject, args: List[Option[MObject]]): Option[MObject] = {
+    function match {
+      case f: MFunction =>
+        val extendEnv = extendFunctionEnv(f, args)
+        val evaluated = eval(f.body, extendEnv)
+        unwrapReturnValue(evaluated)
+      case _ => Some(MError(s"not a function: ${function.typeDesc()}"))
+    }
+  }
+
+  private def unwrapReturnValue(maybeObject: Option[MObject]): Option[MObject] = {
+    maybeObject match {
+      case Some(r: MReturnValue) => Some(r.value)
+      case _ => maybeObject
+    }
+  }
+
+  private def extendFunctionEnv(function: MFunction, args: List[Option[MObject]]): Environment = {
+    val env = Environment.newEnclosedEnvironment(function.env)
+    function.parameters.foreach { parameters =>
+      parameters.zipWithIndex.foreach { case (identifier, i) =>
+        env(identifier.value) = args(i).get
+      }
+    }
+    env
+  }
+
+  private def evalIdentifier(node: Identifier, env: Environment): MObject = {
+    val value = env(node.value)
+    value match {
+      case Some(v) => v
+      case None => MError(s"identifier not found: ${node.value}")
+    }
   }
 
   extension (e: Option[MObject]) {

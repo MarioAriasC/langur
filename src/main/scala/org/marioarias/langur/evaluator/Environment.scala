@@ -1,6 +1,7 @@
 package org.marioarias.langur.evaluator
 
 import org.marioarias.langur.objects.MObject
+
 import scala.collection.mutable
 
 /**
@@ -11,7 +12,22 @@ import scala.collection.mutable
  *         Time: 5:22 PM
  */
 class Environment private(val store: mutable.HashMap[String, MObject], val outer: Option[Environment]) {
+  def put(name: String, value: MObject): MObject = {
+    this (name) = value
+    value
+  }
 
+  def update(name: String, value: MObject): Unit = {
+    store(name) = value
+  }
+
+  def apply(name: String): Option[MObject] = {
+    val obj = store.get(name)
+    if (obj.isEmpty && outer.isDefined) {
+      return outer.get(name)
+    }
+    obj
+  }
 }
 
 object Environment {
