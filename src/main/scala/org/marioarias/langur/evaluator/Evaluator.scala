@@ -15,6 +15,10 @@ object Evaluator {
   val TRUE: MBoolean = MBoolean(true)
   val FALSE: MBoolean = MBoolean(false)
 
+  extension (b: Boolean) {
+    def toMonkey: MBoolean = if (b) TRUE else FALSE
+  }
+
   def eval(node: Option[Node], env: Environment): Option[MObject] = {
     node.flatMap {
       case p: Program => evalProgram(p.statements, env)
@@ -28,6 +32,7 @@ object Evaluator {
           Some(evalInfixExpression(i.operator, left, right))
         }
       }
+      case b: BooleanLiteral => Some(b.value.toMonkey)
     }
   }
 
@@ -71,10 +76,16 @@ object Evaluator {
   }
 
   private def evalInfixExpression(operator: String, left: MObject, right: MObject): MObject = {
-    left match {
-      case integer: MInteger if right.isInstanceOf[MInteger] =>
-        evalIntegerInfixExpression(operator, integer, right.asInstanceOf[MInteger])
-      case _ => MError(s"unknown operator: ${left.typeDesc()} $operator ${right.typeDesc()}")
+    if (left.isInstanceOf[MInteger] && right.isInstanceOf[MInteger]) {
+      evalIntegerInfixExpression(operator, left.asInstanceOf[MInteger], right.asInstanceOf[MInteger])
+    } else if (operator == "==") {
+      (left == right).toMonkey
+    } else if (operator == "!=") {
+      (left != right).toMonkey
+    } else if (left.typeDesc() != right.typeDesc()) {
+      MError(s"type mismatch: ${left.typeDesc()} $operator ${right.typeDesc()}")
+    } else {
+      MError(s"unknown operator: ${left.typeDesc()} $operator ${right.typeDesc()}")
     }
   }
 
@@ -84,6 +95,10 @@ object Evaluator {
       case "-" => left - right
       case "*" => left * right
       case "/" => left / right
+      case "<" => (left < right).toMonkey
+      case ">" => (left > right).toMonkey
+      case "==" => (left == right).toMonkey
+      case "!=" => (left != right).toMonkey
       case _ => MError(s"unknown operator: ${left.typeDesc()} $operator ${right.typeDesc()}")
     }
   }

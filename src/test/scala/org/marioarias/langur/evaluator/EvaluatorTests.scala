@@ -46,6 +46,33 @@ object EvaluatorTests extends TestSuite {
         ("(5 + 10 * 2 + 15 / 3) * 2 + -10", 50)
       ).eval()
     }
+
+    test("eval boolean expression") {
+      List(
+        ("true", true),
+        ("false", false),
+        ("1 < 2", true),
+        ("1 > 2", false),
+        ("1 < 1", false),
+        ("1 > 1", false),
+        ("1 == 1", true),
+        ("1 != 1", false),
+        ("1 == 2", false),
+        ("1 != 2", true),
+        ("true == true", true),
+        ("false == false", true),
+        ("true == false", false),
+        ("true != false", true),
+        ("false != true", true),
+        ("(1 < 2) == true", true),
+        ("(1 < 2) == false", false),
+        ("(1 > 2) == true", false),
+        ("(1 > 2) == false", true)
+      ).foreach { case (input, expected) =>
+        val evaluated = testEval(input)
+        testBoolean(evaluated, expected)
+      }
+    }
   }
 
   private def testInteger(obj: Option[MObject], expected: Long): Unit = {
@@ -55,8 +82,15 @@ object EvaluatorTests extends TestSuite {
     }
   }
 
+  private def testBoolean(obj: Option[MObject], expected: Boolean): Unit = {
+    obj match {
+      case Some(o: MObject) => o.asInstanceOf[MBoolean].value ==> expected
+      case _ => fail(s"obj is not MBoolean. got=$obj")
+    }
+  }
+
   private def testEval(input: String): Option[MObject] = {
-//    println(input)
+    //    println(input)
     val lexer = Lexer(input)
     val parser = Parser(lexer)
     val program = parser.parseProgram()

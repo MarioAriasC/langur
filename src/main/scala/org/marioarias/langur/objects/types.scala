@@ -65,8 +65,10 @@ class MBoolean(value: Boolean) extends MValue[Boolean](value) with MHashable[Boo
   override def equals(obj: Any): Boolean = {
     if (obj.hashCode() == this.hashCode()) return true
     if (!obj.isInstanceOf[MBoolean]) return false
-    obj.isInstanceOf[MBoolean] == value
+    obj.asInstanceOf[MBoolean].value == value
   }
+
+  override def toString: String = s"MBoolean(value=$value)"
 }
 
 object MNull extends MObject {
