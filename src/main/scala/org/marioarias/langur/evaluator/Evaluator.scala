@@ -33,6 +33,8 @@ object Evaluator {
         }
       }
       case b: BooleanLiteral => Some(b.value.toMonkey)
+      case i: IfExpression => evalIfExpression(i, env)
+      case b: BlockStatement => evalBlockStatement(b, env)
     }
   }
 
@@ -101,6 +103,40 @@ object Evaluator {
       case "!=" => (left != right).toMonkey
       case _ => MError(s"unknown operator: ${left.typeDesc()} $operator ${right.typeDesc()}")
     }
+  }
+
+  private def evalIfExpression(expression: IfExpression, env: Environment): Option[MObject] = {
+    def isTruthy(obj: MObject): Boolean = obj match {
+      case NULL => false
+      case TRUE => true
+      case FALSE => false
+      case _ => true
+    }
+
+    eval(expression.condition, env).ifNotError { condition =>
+      if (isTruthy(condition)) {
+        eval(expression.consequence, env)
+      } else if (expression.alternative.isDefined) {
+        eval(expression.alternative, env)
+      } else {
+        Some(NULL)
+      }
+    }
+  }
+
+  private def evalBlockStatement(block: BlockStatement, env: Environment): Option[MObject] = {
+    var result: Option[MObject] = None
+    for statements <- block.statements yield {
+      statements.foreach { statement =>
+        result = eval(statement, env)
+        result.map { some =>
+          if (some.isInstanceOf[MReturnValue] || some.isInstanceOf[MError]) {
+            return result
+          }
+        }
+      }
+    }
+    result
   }
 
   extension (e: Option[MObject]) {

@@ -73,6 +73,38 @@ object EvaluatorTests extends TestSuite {
         testBoolean(evaluated, expected)
       }
     }
+
+    test("bang operator") {
+      List(
+        ("!true", false),
+        ("!false", true),
+        ("!5", false),
+        ("!!true", true),
+        ("!!false", false),
+        ("!!5", true)
+      ).foreach { case (input, expected) =>
+        val evaluated = testEval(input)
+        testBoolean(evaluated, expected)
+      }
+    }
+
+    test("if else expression") {
+      List(
+        ("if (true) { 10 }", Some(10)),
+        ("if (false) { 10 }", None),
+        ("if (1) { 10 }", Some(10)),
+        ("if (1 < 2) { 10 }", Some(10)),
+        ("if (1 > 2) { 10 }", None),
+        ("if (1 > 2) { 10 } else { 20 }", Some(20)),
+        ("if (1 < 2) { 10 } else { 20 }", Some(10))
+      ).foreach { case (input, expected) =>
+        val evaluated = testEval(input)
+        expected match {
+          case Some(l: Int) => testInteger(evaluated, l.toLong)
+          case None => evaluated ==> Some(Evaluator.NULL)
+        }
+      }
+    }
   }
 
   private def testInteger(obj: Option[MObject], expected: Long): Unit = {
