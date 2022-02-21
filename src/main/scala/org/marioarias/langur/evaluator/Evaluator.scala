@@ -2,6 +2,9 @@ package org.marioarias.langur.evaluator
 
 import org.marioarias.langur.ast.*
 import org.marioarias.langur.objects.*
+import org.marioarias.langur.utils.Utils.also
+
+import scala.collection.mutable
 
 /**
  * Created by IntelliJ IDEA.
@@ -47,7 +50,21 @@ object Evaluator {
             applyFunction(function, args)
           }
         }
-      case i:Identifier => Some(evalIdentifier(i, env))
+      case i: Identifier => Some(evalIdentifier(i, env))
+      case s: StringLiteral => Some(MString(s.value))
+      case i: IndexExpression =>
+        val left = eval(i.left, env)
+        if (left.isError) {
+          return left
+        }
+
+        val index = eval(i.index, env)
+        if (index.isError) {
+          return index
+        }
+        evalIndexExpression(left, index)
+      case h: HashLiteral => evalHashLiteral(h, env)
+      case _ => None
     }
   }
 
@@ -201,6 +218,63 @@ object Evaluator {
     value match {
       case Some(v) => v
       case None => MError(s"identifier not found: ${node.value}")
+    }
+  }
+
+  private def evalIndexExpression(left: Option[MObject], index: Option[MObject]): Option[MObject] = {
+    left match {
+      case Some(array: MArray) =>
+        index match {
+          case Some(i: MInteger) => evalArrayIndexExpression(array, i)
+          case _ => Some(MError(s"index operator not supported: ${left.typeDesc()}"))
+        }
+      case Some(hash: MHash) => evalHashIndexExpression(hash, index)
+      case _ => Some(MError(s"index operator not supported: ${left.typeDesc()}"))
+    }
+  }
+
+  private def evalArrayIndexExpression(array: MArray, index: MInteger): Option[MObject] = {
+    val elements = array.elements
+    val i = index.value
+    val max = elements.size - 1
+
+    if (i < 0 || i > max) {
+      return Some(NULL)
+    }
+
+    elements(i.toInt)
+  }
+
+  private def evalHashLiteral(hash: HashLiteral, env: Environment): Option[MObject] = {
+    val pairs = mutable.HashMap.empty[HashKey, HashPair]
+    hash.pairs.foreach { (keyNode, valueNode) =>
+      val key = eval(Some(keyNode), env)
+      if (key.isError) {
+        return key
+      }
+      key match {
+        case Some(hashable: MHashable[?]) =>
+          val value = eval(Some(valueNode), env)
+          if (value.isError) {
+            return value
+          }
+          pairs(hashable.hashKey()) = HashPair(hashable, value.get)
+        case _ => return Some(MError(s"unusable as a hash key: ${key.typeDesc()}"))
+      }
+    }
+    Some(MHash(pairs.toMap))
+  }
+
+  private def evalHashIndexExpression(hash: MHash, index: Option[MObject]): Option[MObject] = {
+    index match {
+      case Some(h: MHashable[?]) =>
+        val pair = hash.pairs.get(h.hashKey())
+        pair match {
+          case Some(value: HashPair) => Some(value.value)
+          case None => Some(NULL)
+        }
+      case _ =>
+        Some(MError(s"unusable as a hash key: ${index.typeDesc()}"))
     }
   }
 

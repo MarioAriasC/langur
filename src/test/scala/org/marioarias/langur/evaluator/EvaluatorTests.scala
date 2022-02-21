@@ -20,9 +20,9 @@ object EvaluatorTests extends TestSuite {
   extension (l: List[(String, Int)]) {
     def eval(): Unit = {
       l.foreach { case (input, expected) =>
-        println(input)
+        //        println(input)
         val evaluated = testEval(input)
-        println(evaluated)
+        //        println(evaluated)
         testInteger(evaluated, expected.toLong)
       }
     }
@@ -141,6 +141,68 @@ object EvaluatorTests extends TestSuite {
           };
           f(10);""", 20
         )).eval()
+    }
+
+    test("error handling") {
+      List(
+        (
+          "5 + true;",
+          "type mismatch: MInteger + MBoolean",
+        ),
+        (
+          "5 + true; 5;",
+          "type mismatch: MInteger + MBoolean",
+        ),
+        (
+          "-true",
+          "unknown operator: -MBoolean",
+        ),
+        (
+          "true + false;",
+          "unknown operator: MBoolean + MBoolean",
+        ),
+        (
+          "true + false + true + false;",
+          "unknown operator: MBoolean + MBoolean",
+        ),
+        (
+          "5; true + false; 5",
+          "unknown operator: MBoolean + MBoolean",
+        ),
+        (
+          "if (10 > 1) { true + false; }",
+          "unknown operator: MBoolean + MBoolean",
+        ),
+        (
+          """
+          if (10 > 1) {
+            if (10 > 1) {
+              return true + false;
+            }
+
+            return 1;
+          }
+          """,
+          "unknown operator: MBoolean + MBoolean",
+        ),
+        (
+          "foobar",
+          "identifier not found: foobar",
+        ),
+        (
+          """"Hello" - "World"""",
+          "unknown operator: MString - MString"
+        ),
+        (
+          """{"name": "Monkey"}[fn(x) {x}];""",
+          "unusable as a hash key: MFunction"
+        )
+      ).foreach { case (input, expected) =>
+        val evaluated = testEval(input)
+        checkType(evaluated) { (error: MError) =>
+          error.message ==> expected
+        }
+      }
     }
   }
 

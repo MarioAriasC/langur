@@ -1,6 +1,6 @@
 package org.marioarias.langur.objects
 
-import org.marioarias.langur.ast._
+import org.marioarias.langur.ast.*
 import org.marioarias.langur.evaluator.Environment
 
 trait MObject {
@@ -82,9 +82,23 @@ class MFunction(val parameters: Option[List[Identifier]], val body: Option[Block
   override def inspect(): String = s"fn(${parameters.map(_.map(_.toString)).getOrElse(List.empty).mkString(",")}) {\n\t${body.debug()}\n}"
 }
 
+class MString(value: String) extends MValue[String](value) with MHashable[String] {
+  override def hashType: HashType = HashType.STRING
+}
+
+class MArray(val elements: List[Option[MObject]]) extends MObject {
+  override def inspect(): String = s"[${elements.map(_.debug()).mkString(", ")}]"
+}
+
+case class HashPair(key: MObject, value: MObject)
+
+class MHash(val pairs: Map[HashKey, HashPair]) extends MObject {
+  override def inspect(): String = s"{${pairs.values.map(pair => s"${pair.key.inspect()}: ${pair.value.inspect()}").mkString(", ")}}"
+}
+
 extension (m: Option[MObject]) {
   def typeDesc(): String = m match {
-    case Some(v) => m.typeDesc()
+    case Some(v) => v.typeDesc()
     case None => "null"
   }
 }
