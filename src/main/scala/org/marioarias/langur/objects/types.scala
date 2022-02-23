@@ -3,6 +3,8 @@ package org.marioarias.langur.objects
 import org.marioarias.langur.ast.*
 import org.marioarias.langur.evaluator.Environment
 
+type BuiltinFunction = List[Option[MObject]] => Option[MObject]
+
 trait MObject {
   def inspect(): String
 }
@@ -84,6 +86,10 @@ class MFunction(val parameters: Option[List[Identifier]], val body: Option[Block
 
 class MString(value: String) extends MValue[String](value) with MHashable[String] {
   override def hashType: HashType = HashType.STRING
+
+  def +(that: MString): MString = MString(value + that.value)
+
+  override def toString: String = s"MString(value=\"$value\")"
 }
 
 class MArray(val elements: List[Option[MObject]]) extends MObject {
@@ -96,6 +102,10 @@ class MHash(val pairs: Map[HashKey, HashPair]) extends MObject {
   override def inspect(): String = s"{${pairs.values.map(pair => s"${pair.key.inspect()}: ${pair.value.inspect()}").mkString(", ")}}"
 }
 
+class MBuiltinFunction(val fn: BuiltinFunction) extends MObject {
+  override def inspect(): String = "builtin function"
+}
+
 extension (m: Option[MObject]) {
   def typeDesc(): String = m match {
     case Some(v) => v.typeDesc()
@@ -105,4 +115,80 @@ extension (m: Option[MObject]) {
 
 extension (m: MObject) {
   def typeDesc(): String = m.getClass.getSimpleName
+}
+
+private def argSizeCheck(expectedSize: Int, args: List[Option[MObject]])(body: BuiltinFunction): Option[MObject] = {
+  val length = args.size
+  if (length != expectedSize) {
+    Some(MError(s"wrong number of arguments. got=$length, want=$expectedSize"))
+  } else {
+    body(args)
+  }
+}
+
+private def arrayCheck(name: String, args: List[Option[MObject]])(body: (MArray, Int) => Option[MObject]): Option[MObject] = {
+  args.head match {
+    case Some(array: MArray) => body(array, array.elements.size)
+    case nonArray: _ => Some(MError(s"argument to `$name` must be ARRAY, got ${nonArray.typeDesc()}"))
+  }
+}
+
+val builtins = List(
+  "len" -> MBuiltinFunction {
+    argSizeCheck(1, _) { args =>
+      args.head match {
+        case Some(s: MString) => Some(MInteger(s.value.length.toLong))
+        case Some(a: MArray) => Some(MInteger(a.elements.size.toLong))
+        case e: _ => Some(MError(s"argument to `len` not supported, got ${e.typeDesc()}"))
+      }
+    }
+  },
+  "first" -> MBuiltinFunction { args =>
+    argSizeCheck(1, args) {
+      arrayCheck("first", _) { (array, length) =>
+        if (length > 0) {
+          array.elements.head
+        } else {
+          None
+        }
+      }
+    }
+  },
+  "last" -> MBuiltinFunction { args =>
+    argSizeCheck(1, args) {
+      arrayCheck("last", _) { (array, length) =>
+        if (length > 0) {
+          array.elements.last
+        } else {
+          None
+        }
+      }
+    }
+  },
+  "rest" -> MBuiltinFunction { args =>
+    argSizeCheck(1, args) {
+      arrayCheck("rest", _) { (array, length) =>
+        if (length > 0) {
+          Some(MArray(array.elements.drop(1)))
+        } else {
+          None
+        }
+      }
+    }
+  },
+  "push" -> MBuiltinFunction { args =>
+    argSizeCheck(2, args) {
+      arrayCheck("push", _) { (array, _) =>
+        Some(MArray(array.elements.appended(args(1))))
+      }
+    }
+  }
+)
+
+extension (l: List[(String, MBuiltinFunction)]) {
+  def getBuiltinByName(name: String): Option[MBuiltinFunction] = {
+    l.find { case (functionName, _) =>
+      name == functionName
+    }.map(_._2)
+  }
 }

@@ -204,21 +204,124 @@ object EvaluatorTests extends TestSuite {
         }
       }
     }
+
+    test("let statement") {
+      List(
+        ("let a = 5; a;", 5),
+        ("let a = 5 * 5; a;", 25),
+        ("let a = 5; let b = a; b;", 5),
+        ("let a = 5; let b = a; let c = a + b + 5; c;", 15)
+      ).eval()
+    }
+
+    test("function object") {
+      val input = "fn(x) { x + 2; };"
+      val evaluated = testEval(input)
+      checkType(evaluated) { (fn: MFunction) =>
+        for parameters <- fn.parameters yield {
+          parameters.size ==> 1
+          parameters.head.toString ==> "x"
+        }
+        fn.body.map(_.toString).getOrElse("") ==> "(x + 2)"
+      }
+    }
+
+    test("function application") {
+      List(
+        ("let identity = fn(x) { x; }; identity(5);", 5),
+        ("let identity = fn(x) { return x; }; identity(5);", 5),
+        ("let double = fn(x) { x * 2; }; double(5);", 10),
+        ("let add = fn(x, y) { x + y; }; add(5, 5);", 10),
+        ("let add = fn(x, y) { x + y; }; add(5 + 5, add(5, 5));", 20),
+        ("fn(x) { x; }(5)", 5),
+      ).eval()
+    }
+
+    test("enclosing environment") {
+      val input =
+        """let first = 10;
+           let second = 10;
+           let third = 10;
+
+           let ourFunction = fn(first) {
+             let second = 20;
+
+             first + second + third;
+           };
+
+           ourFunction(20) + first + second;"""
+      testInteger(testEval(input), 70L)
+    }
+
+    test("string literal") {
+      val input = """"Hello World!""""
+      testString(testEval(input), "Hello World!")
+    }
+
+    test("string concatenation") {
+      val input = """"Hello" + " " + "World!""""
+      testString(testEval(input), "Hello World!")
+    }
+
+    test("builtin functions") {
+      List(
+        ("""len("")""", Some(0)),
+        ("""len("four")""", Some(4)),
+        ("""len("hello world")""", Some(11)),
+        ("len(1)", Some("argument to `len` not supported, got MInteger")),
+        ("""len("one", "two")""", Some("wrong number of arguments. got=2, want=1")),
+        ("len([1, 2, 3])", Some(3)),
+        ("len([])", Some(0)),
+        ("push([], 1)", Some(List(1))),
+        ("push(1, 1)", Some("argument to `push` must be ARRAY, got MInteger")),
+        ("first([1, 2, 3])", Some(1)),
+        ("first([])", None),
+        ("first(1)", Some("argument to `first` must be ARRAY, got MInteger")),
+        ("last([1, 2, 3])", Some(3)),
+        ("last([])", None),
+        ("last(1)", Some("argument to `last` must be ARRAY, got MInteger")),
+        ("rest([1, 2, 3])", Some(List(2, 3))),
+        ("rest([])", None),
+      ).foreach { case (input, expected) =>
+        val evaluated = testEval(input)
+        expected match {
+          case None => evaluated ==> Some(Evaluator.NULL)
+          case Some(i: Int) => testInteger(evaluated, i.toLong)
+          case Some(s: String) => checkType(evaluated) { (error: MError) =>
+            Some(error.message) ==> expected
+          }
+          case Some(l: List[Int]) => checkType(evaluated) { (array: MArray) =>
+            l.size ==> array.elements.size
+            l.zipWithIndex.foreach { case (element, i) =>
+              testInteger(array.elements(i), element.toLong)
+            }
+          }
+        }
+      }
+    }
+  }
+
+  private def testString(obj: Option[MObject], expected: String): Unit = {
+    obj match {
+      case Some(o: MString) => o.value ==> expected
+      case _ => fail(s"obj is not MString. got=$obj")
+    }
   }
 
   private def testInteger(obj: Option[MObject], expected: Long): Unit = {
     obj match {
-      case Some(o: MObject) => o.asInstanceOf[MInteger].value ==> expected
+      case Some(o: MInteger) => o.value ==> expected
       case _ => fail(s"obj is not MInteger. got=$obj")
     }
   }
 
   private def testBoolean(obj: Option[MObject], expected: Boolean): Unit = {
     obj match {
-      case Some(o: MObject) => o.asInstanceOf[MBoolean].value ==> expected
+      case Some(o: MBoolean) => o.value ==> expected
       case _ => fail(s"obj is not MBoolean. got=$obj")
     }
   }
+
 
   private def testEval(input: String): Option[MObject] = {
     //    println(input)
@@ -226,7 +329,7 @@ object EvaluatorTests extends TestSuite {
     val parser = Parser(lexer)
     val program = parser.parseProgram()
     if (parser.errors().nonEmpty) {
-      parser.errors().foreach(println(_))
+      fail(parser.errors().mkString("\n"))
     }
 
     Evaluator.eval(Some(program), Environment.newEnvironment())

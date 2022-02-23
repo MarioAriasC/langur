@@ -64,7 +64,14 @@ object Evaluator {
         }
         evalIndexExpression(left, index)
       case h: HashLiteral => evalHashLiteral(h, env)
-      case _ => None
+      case a: ArrayLiteral =>
+        val elements = evalExpressions(a.elements, env)
+        if (elements.size == 1 && elements.head.isError) {
+          elements.head
+        } else {
+          Some(MArray(elements))
+        }
+      //      case _ => None
     }
   }
 
@@ -91,10 +98,9 @@ object Evaluator {
   }
 
   private def evalMinusPrefixOperatorExpression(right: MObject): MObject = {
-    if (!right.isInstanceOf[MInteger]) {
-      MError(s"unknown operator: -${right.typeDesc()}")
-    } else {
-      -right.asInstanceOf[MInteger]
+    right match {
+      case i: MInteger => -i
+      case _ => MError(s"unknown operator: -${right.typeDesc()}")
     }
   }
 
@@ -108,30 +114,20 @@ object Evaluator {
   }
 
   private def evalInfixExpression(operator: String, left: MObject, right: MObject): MObject = {
-    if (left.isInstanceOf[MInteger] && right.isInstanceOf[MInteger]) {
-      evalIntegerInfixExpression(operator, left.asInstanceOf[MInteger], right.asInstanceOf[MInteger])
-    } else if (operator == "==") {
-      (left == right).toMonkey
-    } else if (operator == "!=") {
-      (left != right).toMonkey
-    } else if (left.typeDesc() != right.typeDesc()) {
-      MError(s"type mismatch: ${left.typeDesc()} $operator ${right.typeDesc()}")
-    } else {
-      MError(s"unknown operator: ${left.typeDesc()} $operator ${right.typeDesc()}")
-    }
-  }
-
-  private def evalIntegerInfixExpression(operator: String, left: MInteger, right: MInteger): MObject = {
-    operator match {
-      case "+" => left + right
-      case "-" => left - right
-      case "*" => left * right
-      case "/" => left / right
-      case "<" => (left < right).toMonkey
-      case ">" => (left > right).toMonkey
-      case "==" => (left == right).toMonkey
-      case "!=" => (left != right).toMonkey
-      case _ => MError(s"unknown operator: ${left.typeDesc()} $operator ${right.typeDesc()}")
+    (left, operator, right) match {
+      case (left: MInteger, "+", right: MInteger) => left + right
+      case (left: MInteger, "-", right: MInteger) => left - right
+      case (left: MInteger, "*", right: MInteger) => left * right
+      case (left: MInteger, "/", right: MInteger) => left / right
+      case (left: MInteger, "<", right: MInteger) => (left < right).toMonkey
+      case (left: MInteger, ">", right: MInteger) => (left > right).toMonkey
+      case (left: MInteger, "==", right: MInteger) => (left == right).toMonkey
+      case (left: MInteger, "!=", right: MInteger) => (left != right).toMonkey
+      case (_, "==", _) => (left == right).toMonkey
+      case (_, "!=", _) => (left != right).toMonkey
+      case (_, _, _) if left.typeDesc() != right.typeDesc() => MError(s"type mismatch: ${left.typeDesc()} $operator ${right.typeDesc()}")
+      case (left: MString, "+", right: MString) => left + right
+      case (_, _, _) => MError(s"unknown operator: ${left.typeDesc()} $operator ${right.typeDesc()}")
     }
   }
 
@@ -171,7 +167,8 @@ object Evaluator {
 
   extension (o: Option[MObject]) {
     def isError: Boolean = o match {
-      case Some(e) => e.isInstanceOf[MError]
+      case Some(e: MError) => true
+      case Some(_) => false
       case None => false
     }
   }
@@ -192,6 +189,7 @@ object Evaluator {
         val extendEnv = extendFunctionEnv(f, args)
         val evaluated = eval(f.body, extendEnv)
         unwrapReturnValue(evaluated)
+      case f: MBuiltinFunction => f.fn(args).orElse(Some(NULL))
       case _ => Some(MError(s"not a function: ${function.typeDesc()}"))
     }
   }
@@ -217,19 +215,19 @@ object Evaluator {
     val value = env(node.value)
     value match {
       case Some(v) => v
-      case None => MError(s"identifier not found: ${node.value}")
+      case None =>
+        Builtins(node.value) match {
+          case Some(b: MBuiltinFunction) => b
+          case None => MError(s"identifier not found: ${node.value}")
+        }
     }
   }
 
   private def evalIndexExpression(left: Option[MObject], index: Option[MObject]): Option[MObject] = {
-    left match {
-      case Some(array: MArray) =>
-        index match {
-          case Some(i: MInteger) => evalArrayIndexExpression(array, i)
-          case _ => Some(MError(s"index operator not supported: ${left.typeDesc()}"))
-        }
-      case Some(hash: MHash) => evalHashIndexExpression(hash, index)
-      case _ => Some(MError(s"index operator not supported: ${left.typeDesc()}"))
+    (left, index) match {
+      case (Some(array: MArray), Some(i: MInteger)) => evalArrayIndexExpression(array, i)
+      case (Some(hash: MHash), _) => evalHashIndexExpression(hash, index)
+      case (_, _) => Some(MError(s"index operator not supported: ${left.typeDesc()}"))
     }
   }
 
