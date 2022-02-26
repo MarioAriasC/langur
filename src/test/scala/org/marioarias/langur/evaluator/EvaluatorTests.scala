@@ -301,6 +301,13 @@ object EvaluatorTests extends TestSuite {
     }
   }
 
+  /*private def testObject[T: ClassTag, M <: MValue[T]](obj: Option[MObject], expected: T): Unit = {
+    obj match {
+      case Some(o: M) => o.value ==> expected
+      case _ => fail(s"obj does not have a ${classTag[T]} value")
+    }
+  }*/
+
   private def testString(obj: Option[MObject], expected: String): Unit = {
     obj match {
       case Some(o: MString) => o.value ==> expected

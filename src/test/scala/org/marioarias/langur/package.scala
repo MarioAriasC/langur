@@ -1,5 +1,12 @@
 package org.marioarias
 
+import org.marioarias.langur.ast.Program
+import org.marioarias.langur.code.*
+import org.marioarias.langur.lexer.Lexer
+import org.marioarias.langur.objects.{MInteger, MObject,typeDesc}
+import org.marioarias.langur.parser.Parser
+import utest.ArrowAssert
+
 import scala.reflect.{ClassTag, classTag}
 
 /** Created by IntelliJ IDEA.
@@ -20,4 +27,25 @@ package object langur {
   }
 
   def fail(message: String) = throw new RuntimeException(message)
+
+  extension (l: List[Instructions]) {
+    def concatInstructions: Instructions = l.fold(Array[UB]()) { (acc, bytes) => acc ++ bytes }
+  }
+
+  def parse(input: String): Program = {
+    Parser(Lexer(input)).parseProgram()
+  }
+
+  def assertInstructions(expected:Instructions, actual:Instructions):Unit = {
+    expected.zipWithIndex.foreach{ (byte,i) =>
+      byte ==> actual(i)
+    }
+  }
+
+  def testIntegerObject(expected:Long, actual:MObject): Unit = {
+    actual match {
+      case i:MInteger => expected ==> i.value
+      case _ => fail(s"object is not Integer. got=${actual.typeDesc()}")
+    }
+  }
 }
