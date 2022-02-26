@@ -1,6 +1,7 @@
 package org.marioarias.langur.compiler
 
 import org.marioarias.langur.code.*
+import org.marioarias.langur.utils.Utils.also
 import org.marioarias.langur.objects.MObject
 import org.marioarias.langur.{assertInstructions, concatInstructions, parse, testIntegerObject}
 import utest.{ArrowAssert, TestSuite, Tests, test}
@@ -106,7 +107,7 @@ object CompilerTests extends TestSuite {
     expected.length ==> actual.length
     expected.zipWithIndex.foreach { (constant, i) =>
       constant match {
-        case l: Long => testIntegerObject(l, actual(i))
+        case l: Int => testIntegerObject(l, actual(i))
       }
     }
   }
