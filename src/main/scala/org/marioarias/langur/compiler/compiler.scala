@@ -13,10 +13,14 @@ import scala.collection.mutable
  *         Date: 26/2/22
  *         Time: 2:01 PM
  */
-class MCompiler {
-  private val constants = mutable.ListBuffer.empty[MObject]
+class MCompiler(
+                 private val constants: mutable.ListBuffer[MObject] = mutable.ListBuffer.empty[MObject],
+                 var symbolTable: SymbolTable = SymbolTable()
+               ) {
+
   private val scopes = mutable.ListBuffer(CompilationScope())
   var scopeIndex = 0
+
 
   def compile(node: Node): Unit = {
     node match {
@@ -51,6 +55,39 @@ class MCompiler {
           case "-" => emit(OpMinus)
           case operator: _ => throw MCompilerException(s"unknown operator $operator")
         }
+      case bl: BooleanLiteral => if (bl.value) emit(OpTrue) else emit(OpFalse)
+      case ie: IfExpression =>
+        compile(ie.condition.get)
+        val jumpNotTruthyPos = emit(OpJumpNotTruthy, 9999)
+        compile(ie.consequence.get)
+        if (isLastInstructionPop) {
+          removeLastPop()
+        }
+        val jumpPos = emit(OpJump, 9999)
+        val afterConsequencePos = currentInstructions.length
+        changeOperand(jumpNotTruthyPos, afterConsequencePos)
+        if (ie.alternative.isEmpty) {
+          emit(OpNull)
+        } else {
+          compile(ie.alternative.get)
+          if (isLastInstructionPop) {
+            removeLastPop()
+          }
+        }
+        val afterAlternativePos = currentInstructions.length
+        changeOperand(jumpPos, afterAlternativePos)
+      case bs: BlockStatement => bs.statements.foreach(_.foreach(statement => compile(statement.get)))
+      case ls: LetStatement =>
+        val symbol = symbolTable.define(ls.name.value)
+        compile(ls.value.get)
+        if (symbol.scope == SymbolScope.GLOBAL) {
+          emit(OpSetGlobal, symbol.index)
+        } else {
+          emit(OpSetLocal, symbol.index)
+        }
+      case id: Identifier =>
+        val symbol = symbolTable.resolve(id.value)
+        loadSymbol(symbol)
     }
   }
 
@@ -59,6 +96,49 @@ class MCompiler {
     val pos = addInstruction(ins)
     setLastInstruction(op, pos)
     pos
+  }
+
+  private def loadSymbol(symbol: Symbol): Unit = {
+    val opcode = symbol.scope match {
+      case SymbolScope.GLOBAL => OpGetGlobal
+      case SymbolScope.LOCAL => OpGetLocal
+      case SymbolScope.BUILTIN => OpGetBuiltin
+      case SymbolScope.FREE => OpGetFree
+      case SymbolScope.FUNCTION => OpCurrentClosure
+    }
+
+    if (opcode != OpCurrentClosure) {
+      emit(opcode, symbol.index)
+    } else {
+      emit(opcode)
+    }
+  }
+
+  private def changeOperand(opPos: Int, operand: Int): Unit = {
+    val op = currentInstructions(opPos)
+    val newInstruction = make(op, operand)
+    replaceInstruction(opPos, newInstruction)
+  }
+
+  private def replaceInstruction(pos: Int, newInstruction: Instructions): Unit = {
+    for (i <- newInstruction.indices) {
+      currentInstructions(pos + i) = newInstruction(i)
+    }
+  }
+
+  private def isLastInstructionPop: Boolean = lastInstructionIs(OpPop)
+
+  private def lastInstructionIs(op: Opcode) = currentScope.lastInstruction.op == op
+
+  private def removeLastPop(): Unit = {
+    val scope = currentScope
+    val last = scope.lastInstruction
+    val previous = scope.previousInstruction
+
+    val old = currentInstructions
+    val newInstruction = old.onset(last.position)
+    scope.instructions = newInstruction
+    scope.lastInstruction = previous
   }
 
   private def setLastInstruction(op: Opcode, position: Int): Unit = {

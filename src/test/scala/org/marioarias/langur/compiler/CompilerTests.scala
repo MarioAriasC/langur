@@ -1,7 +1,6 @@
 package org.marioarias.langur.compiler
 
 import org.marioarias.langur.code.*
-import org.marioarias.langur.utils.Utils.also
 import org.marioarias.langur.objects.MObject
 import org.marioarias.langur.{assertInstructions, concatInstructions, parse, testIntegerObject}
 import utest.{ArrowAssert, TestSuite, Tests, test}
@@ -77,6 +76,163 @@ object CompilerTests extends TestSuite {
             make(OpConstant, 0),
             make(OpMinus),
             make(OpPop)
+          )
+        )
+      ).runCompilerTests()
+    }
+    test("boolean expressions") {
+      List(
+        CTC(
+          "true",
+          List(),
+          List(
+            make(OpTrue),
+            make(OpPop)
+          )
+        ),
+        CTC(
+          "false",
+          List(),
+          List(
+            make(OpFalse),
+            make(OpPop)
+          )
+        ),
+        CTC(
+          "1 > 2",
+          List(1, 2),
+          List(
+            make(OpConstant, 0),
+            make(OpConstant, 1),
+            make(OpGreaterThan),
+            make(OpPop)
+          )
+        ),
+        CTC(
+          "1 < 2",
+          List(2, 1),
+          List(
+            make(OpConstant, 0),
+            make(OpConstant, 1),
+            make(OpGreaterThan),
+            make(OpPop)
+          )
+        ),
+        CTC(
+          "1 == 2",
+          List(1, 2),
+          List(
+            make(OpConstant, 0),
+            make(OpConstant, 1),
+            make(OpEqual),
+            make(OpPop)
+          )
+        ),
+        CTC(
+          "1 != 2",
+          List(1, 2),
+          List(
+            make(OpConstant, 0),
+            make(OpConstant, 1),
+            make(OpNotEqual),
+            make(OpPop)
+          )
+        ),
+        CTC(
+          "true == false",
+          List(),
+          List(
+            make(OpTrue),
+            make(OpFalse),
+            make(OpEqual),
+            make(OpPop)
+          )
+        ),
+        CTC(
+          "true != false",
+          List(),
+          List(
+            make(OpTrue),
+            make(OpFalse),
+            make(OpNotEqual),
+            make(OpPop)
+          )
+        ),
+        CTC(
+          "!true",
+          List(),
+          List(
+            make(OpTrue),
+            make(OpBang),
+            make(OpPop)
+          )
+        )
+      ).runCompilerTests()
+    }
+    test("conditionals") {
+      List(
+        CTC(
+          "if (true) {10}; 3333;",
+          List(10, 3333),
+          List(
+            make(OpTrue),
+            make(OpJumpNotTruthy, 10),
+            make(OpConstant, 0),
+            make(OpJump, 11),
+            make(OpNull),
+            make(OpPop),
+            make(OpConstant, 1),
+            make(OpPop)
+          )
+        ),
+        CTC(
+          "if (true) {10} else {20}; 3333;",
+          List(10, 20, 3333),
+          List(
+            make(OpTrue),
+            make(OpJumpNotTruthy, 10),
+            make(OpConstant, 0),
+            make(OpJump, 13),
+            make(OpConstant, 1),
+            make(OpPop),
+            make(OpConstant, 2),
+            make(OpPop)
+          )
+        )
+      ).runCompilerTests()
+    }
+    test("global let statement") {
+      List(
+        CTC(
+          "let one = 1; let two = 2;",
+          List(1, 2),
+          List(
+            make(OpConstant, 0),
+            make(OpSetGlobal, 0),
+            make(OpConstant, 1),
+            make(OpSetGlobal, 1),
+          )
+        ),
+        CTC(
+          "let one = 1; one;",
+          List(1),
+          List(
+            make(OpConstant, 0),
+            make(OpSetGlobal, 0),
+            make(OpGetGlobal, 0),
+            make(OpPop),
+          )
+        ),
+        CTC(
+          "let one = 1; let two = one; two;",
+          List(1),
+          List(
+            make(OpConstant, 0),
+            make(OpSetGlobal, 0),
+            make(OpGetGlobal, 0),
+            make(OpSetGlobal, 1),
+            make(OpGetGlobal, 1),
+            make(OpPop),
           )
         )
       ).runCompilerTests()

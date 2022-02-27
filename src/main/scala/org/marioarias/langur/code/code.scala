@@ -7,7 +7,7 @@ class UnsignedByte(val byte: Short) extends AnyVal {
 
   def &(i: Int): Int = byte & i
 
-  def toInt:Int = byte
+  def toInt: Int = byte
 }
 
 class Definition(val name: String, val operandsWidths: Array[Int] = Array.emptyIntArray) {
@@ -43,6 +43,8 @@ type Instructions = Array[UB]
 extension (i: Instructions) {
   def offset(offset: Int): Instructions = i.slice(offset, i.length)
 
+  def onset(onset: Int): Instructions = i.slice(0, onset)
+
   def writeChar(offset: Int, v: Int): Unit = {
     i(offset) = ((v >>> 8) & 255).u
     i(offset + 1) = ((v >>> 0) & 255).u
@@ -60,9 +62,9 @@ extension (i: Instructions) {
     }
   }
 
-  def readByte: UB ={
+  def readByte: UB = {
     val ch = read(0)
-    if(ch < 0){
+    if (ch < 0) {
       throw IllegalStateException()
     } else {
       ch.u
