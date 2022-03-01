@@ -2,6 +2,7 @@ package org.marioarias.langur.objects
 
 import org.marioarias.langur.ast.*
 import org.marioarias.langur.evaluator.Environment
+import org.marioarias.langur.code.Instructions
 
 type BuiltinFunction = List[Option[MObject]] => Option[MObject]
 
@@ -104,6 +105,10 @@ class MHash(val pairs: Map[HashKey, HashPair]) extends MObject {
 
 class MBuiltinFunction(val fn: BuiltinFunction) extends MObject {
   override def inspect(): String = "builtin function"
+}
+
+class MCompiledFunction(val instructions: Instructions, val numLocals: Int = 0, val numParameters: Int = 0) extends MObject {
+  override def inspect(): String = s"CompiledFunction[$this]"
 }
 
 extension (m: Option[MObject]) {

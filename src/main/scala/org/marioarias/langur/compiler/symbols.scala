@@ -50,6 +50,12 @@ class SymbolTable(private val store: mutable.HashMap[String, Symbol] = mutable.H
     }
   }
 
+  def defineFunctionName(name: String): Symbol = {
+    val symbol = Symbol(name, SymbolScope.FUNCTION, 0)
+    store(name) = symbol
+    symbol
+  }
+
   private def defineFree(original: Symbol): Symbol = {
     freeSymbols += original
     val symbol = Symbol(original.name, SymbolScope.FREE, freeSymbols.length - 1)

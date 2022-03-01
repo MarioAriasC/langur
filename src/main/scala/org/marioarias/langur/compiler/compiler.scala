@@ -2,7 +2,8 @@ package org.marioarias.langur.compiler
 
 import org.marioarias.langur.ast.*
 import org.marioarias.langur.code.*
-import org.marioarias.langur.objects.{MInteger, MObject}
+import org.marioarias.langur.objects.{MCompiledFunction, MInteger, MObject, MString}
+import org.marioarias.langur.utils.Utils.also
 
 import scala.collection.mutable
 
@@ -88,6 +89,46 @@ class MCompiler(
       case id: Identifier =>
         val symbol = symbolTable.resolve(id.value)
         loadSymbol(symbol)
+      case sl: StringLiteral =>
+        val str = MString(sl.value)
+        emit(OpConstant, addConstant(str))
+      case al: ArrayLiteral =>
+        al.elements.foreach(_.foreach(element => compile(element.get)))
+        emit(OpArray, al.elements.get.length)
+      case hl: HashLiteral =>
+        val keys = hl.pairs.keys.toArray.sortBy(_.toString)
+        keys.foreach { key =>
+          compile(key)
+          compile(hl.pairs(key))
+        }
+        emit(OpHash, hl.pairs.size * 2)
+      case ie: IndexExpression =>
+        compile(ie.left.get)
+        compile(ie.index.get)
+        emit(OpIndex)
+      case fl: FunctionLiteral =>
+        enterScope()
+        if (fl.name.nonEmpty) {
+          symbolTable.defineFunctionName(fl.name)
+        }
+        fl.parameters.foreach(_.foreach(parameter => symbolTable.define(parameter.value)))
+        compile(fl.body.get)
+        if (isLastInstructionPop) {
+          replaceLastPopWithReturn()
+        }
+        if (!lastInstructionIs(OpReturnValue)) {
+          emit(OpReturn)
+        }
+
+        val freeSymbols = symbolTable.freeSymbols
+        val numLocals = symbolTable.numDefinitions
+        val instructions = leaveScope()
+        freeSymbols.foreach(loadSymbol)
+        val compiledFn = MCompiledFunction(instructions, numLocals, fl.parameters.get.length)
+        emit(OpClosure, addConstant(compiledFn), freeSymbols.length)
+      case rs: ReturnStatement =>
+        compile(rs.returnValue.get)
+        emit(OpReturnValue)
     }
   }
 
@@ -96,6 +137,20 @@ class MCompiler(
     val pos = addInstruction(ins)
     setLastInstruction(op, pos)
     pos
+  }
+
+  private def enterScope(): Unit = {
+    scopes.addOne(CompilationScope())
+    symbolTable = SymbolTable(outer = Some(symbolTable))
+    scopeIndex = scopeIndex + 1
+  }
+
+  private def leaveScope(): Instructions = {
+    val instructions = currentInstructions
+    scopes.remove(scopes.length - 1)
+    scopeIndex = scopeIndex - 1
+    symbolTable = symbolTable.outer.get
+    instructions
   }
 
   private def loadSymbol(symbol: Symbol): Unit = {
@@ -118,6 +173,12 @@ class MCompiler(
     val op = currentInstructions(opPos)
     val newInstruction = make(op, operand)
     replaceInstruction(opPos, newInstruction)
+  }
+
+  private def replaceLastPopWithReturn(): Unit = {
+    val lasPos = currentScope.lastInstruction.position
+    replaceInstruction(lasPos, make(OpReturnValue))
+    currentScope.lastInstruction.op = OpReturnValue
   }
 
   private def replaceInstruction(pos: Int, newInstruction: Instructions): Unit = {
@@ -162,7 +223,7 @@ class MCompiler(
 
   def bytecode: Bytecode = Bytecode(currentInstructions, constants.toList)
 
-  def currentScope: CompilationScope = scopes(scopeIndex)
+  def currentScope: CompilationScope = scopes(scopeIndex.also(i => println(s"scopeIndex = $i")))
 
   private def currentInstructions = currentScope.instructions
 }

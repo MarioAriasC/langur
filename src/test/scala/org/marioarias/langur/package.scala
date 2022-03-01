@@ -3,7 +3,7 @@ package org.marioarias
 import org.marioarias.langur.ast.Program
 import org.marioarias.langur.code.*
 import org.marioarias.langur.lexer.Lexer
-import org.marioarias.langur.objects.{MInteger, MObject,typeDesc}
+import org.marioarias.langur.objects.{MInteger, MObject, MString, typeDesc}
 import org.marioarias.langur.parser.Parser
 import utest.ArrowAssert
 
@@ -36,16 +36,23 @@ package object langur {
     Parser(Lexer(input)).parseProgram()
   }
 
-  def assertInstructions(expected:Instructions, actual:Instructions):Unit = {
-    expected.zipWithIndex.foreach{ (byte,i) =>
+  def assertInstructions(expected: Instructions, actual: Instructions): Unit = {
+    expected.zipWithIndex.foreach { (byte, i) =>
       byte ==> actual(i)
     }
   }
 
-  def testIntegerObject(expected:Long, actual:MObject): Unit = {
+  def testIntegerObject(expected: Long, actual: MObject): Unit = {
     actual match {
-      case i:MInteger => expected ==> i.value
+      case i: MInteger => expected ==> i.value
       case _ => fail(s"object is not Integer. got=${actual.typeDesc()}")
+    }
+  }
+
+  def testStringObject(expected: String, actual: MObject): Unit = {
+    actual match {
+      case s: MString => expected ==> s.value
+      case _ => fail(s"object is not String. got=${actual.typeDesc()}")
     }
   }
 }
