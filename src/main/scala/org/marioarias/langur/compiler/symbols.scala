@@ -33,6 +33,17 @@ class SymbolTable(private val store: mutable.HashMap[String, Symbol] = mutable.H
     symbol
   }
 
+  def defineBuiltin(index:Int, name: String): Symbol = {
+    val stored = store.get(name)
+    stored match {
+      case None => 
+        val symbol = Symbol(name, SymbolScope.BUILTIN, index)
+        store(name) = symbol
+        symbol
+      case Some(symbol:Symbol) => symbol  
+    }
+  }
+
   def resolve(name: String): Symbol = {
     store.get(name) match {
       case Some(s: Symbol) => s

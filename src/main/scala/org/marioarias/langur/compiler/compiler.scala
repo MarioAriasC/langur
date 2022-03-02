@@ -2,7 +2,7 @@ package org.marioarias.langur.compiler
 
 import org.marioarias.langur.ast.*
 import org.marioarias.langur.code.*
-import org.marioarias.langur.objects.{MCompiledFunction, MInteger, MObject, MString}
+import org.marioarias.langur.objects.*
 import org.marioarias.langur.utils.Utils.also
 
 import scala.collection.mutable
@@ -18,7 +18,9 @@ class MCompiler(
                  private val constants: mutable.ListBuffer[MObject] = mutable.ListBuffer.empty[MObject],
                  var symbolTable: SymbolTable = SymbolTable()
                ) {
-
+  builtins.zipWithIndex.foreach { case ((name, _), i) =>
+    symbolTable.defineBuiltin(i, name)
+  }
   private val scopes = mutable.ListBuffer(CompilationScope())
   var scopeIndex = 0
 
@@ -129,6 +131,10 @@ class MCompiler(
       case rs: ReturnStatement =>
         compile(rs.returnValue.get)
         emit(OpReturnValue)
+      case ce: CallExpression =>
+        compile(ce.function.get)
+        ce.arguments.foreach(_.foreach(arg => compile(arg.get)))
+        emit(OpCall, ce.arguments.get.length)
     }
   }
 
@@ -139,13 +145,13 @@ class MCompiler(
     pos
   }
 
-  private def enterScope(): Unit = {
+  def enterScope(): Unit = {
     scopes.addOne(CompilationScope())
     symbolTable = SymbolTable(outer = Some(symbolTable))
     scopeIndex = scopeIndex + 1
   }
 
-  private def leaveScope(): Instructions = {
+  def leaveScope(): Instructions = {
     val instructions = currentInstructions
     scopes.remove(scopes.length - 1)
     scopeIndex = scopeIndex - 1
@@ -223,7 +229,7 @@ class MCompiler(
 
   def bytecode: Bytecode = Bytecode(currentInstructions, constants.toList)
 
-  def currentScope: CompilationScope = scopes(scopeIndex.also(i => println(s"scopeIndex = $i")))
+  def currentScope: CompilationScope = scopes(scopeIndex)
 
   private def currentInstructions = currentScope.instructions
 }

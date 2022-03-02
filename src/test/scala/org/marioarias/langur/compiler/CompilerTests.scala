@@ -423,12 +423,340 @@ object CompilerTests extends TestSuite {
         )
       ).runCompilerTests()
     }
+    test("compiler scopes") {
+      val compiler = MCompiler()
+      testScopeIndexSize(compiler, 0)
+      val globalSymbolTable = compiler.symbolTable
+      compiler.emit(OpMul)
+
+      compiler.enterScope()
+      testScopeIndexSize(compiler, 1)
+
+      compiler.emit(OpSub)
+
+      testScopeInstructionsSize(compiler, 1)
+
+      var last = compiler.currentScope.lastInstruction
+      OpSub ==> last.op
+
+      Some(globalSymbolTable) ==> compiler.symbolTable.outer
+
+      compiler.leaveScope()
+      testScopeIndexSize(compiler, 0)
+
+      globalSymbolTable ==> compiler.symbolTable
+
+      compiler.symbolTable.outer ==> None
+
+      compiler.emit(OpAdd)
+
+      testScopeInstructionsSize(compiler, 2)
+
+      last = compiler.currentScope.lastInstruction
+      OpAdd ==> last.op
+
+      val previous = compiler.currentScope.previousInstruction
+      OpMul ==> previous.op
+    }
+    test("let statements scopes") {
+      List(
+        CTC(
+          """
+      let num = 55;
+      fn() { num }
+                  """.stripMargin,
+          List(
+            55, List(
+              make(OpGetGlobal, 0),
+              make(OpReturnValue),
+            )
+          ),
+          List(
+            make(OpConstant, 0),
+            make(OpSetGlobal, 0),
+            make(OpClosure, 1, 0),
+            make(OpPop)
+          )
+        ),
+        CTC(
+          """
+                  fn() {
+                  	let num = 55;
+                  	num
+                  }
+                                      """.stripMargin,
+          List(
+            55,
+            List(
+              make(OpConstant, 0),
+              make(OpSetLocal, 0),
+              make(OpGetLocal, 0),
+              make(OpReturnValue),
+            )
+          ),
+          List(
+            make(OpClosure, 1, 0),
+            make(OpPop)
+          )
+        ),
+        CTC(
+          """
+      fn() {
+      	let a = 55;
+      	let b = 77;
+      	a + b;
+      }
+                      """.stripMargin,
+          List(
+            55, 77, List(
+              make(OpConstant, 0),
+              make(OpSetLocal, 0),
+              make(OpConstant, 1),
+              make(OpSetLocal, 1),
+              make(OpGetLocal, 0),
+              make(OpGetLocal, 1),
+              make(OpAdd),
+              make(OpReturnValue),
+            )
+          ),
+          List(
+            make(OpClosure, 2, 0),
+            make(OpPop)
+          )
+        )
+      ).runCompilerTests()
+    }
+    test("builtins") {
+      List(
+        CTC(
+          """
+      len([]);
+      push([], 1);
+                  """.stripMargin,
+          List(1),
+          List(
+            make(OpGetBuiltin, 0),
+            make(OpArray, 0),
+            make(OpCall, 1),
+            make(OpPop),
+            make(OpGetBuiltin, 5),
+            make(OpArray, 0),
+            make(OpConstant, 0),
+            make(OpCall, 2),
+            make(OpPop)
+          )
+        ),
+        CTC(
+          "fn() { len([])}",
+          List(
+            List(
+              make(OpGetBuiltin, 0),
+              make(OpArray, 0),
+              make(OpCall, 1),
+              make(OpReturnValue)
+            )
+          ),
+          List(
+            make(OpClosure, 0, 0),
+            make(OpPop)
+          )
+        )
+      ).runCompilerTests()
+    }
+    test("closures") {
+      List(
+        CTC(
+          """
+                      fn(a) {
+                      	fn(b){
+                      		a + b
+                      	}
+                      }
+                      """.stripMargin,
+          List(
+            List(
+              make(OpGetFree, 0),
+              make(OpGetLocal, 0),
+              make(OpAdd),
+              make(OpReturnValue),
+            ),
+            List(
+              make(OpGetLocal, 0),
+              make(OpClosure, 0, 1),
+              make(OpReturnValue),
+            )
+          ),
+          List(
+            make(OpClosure, 1, 0),
+            make(OpPop),
+          )
+        ),
+        CTC(
+          """
+                  fn(a) {
+                  	fn(b){
+                  		fn(c) {
+                  			a + b + c
+                  		}
+                  	}
+                  }
+                  """,
+          List(
+            List(
+              make(OpGetFree, 0),
+              make(OpGetFree, 1),
+              make(OpAdd),
+              make(OpGetLocal, 0),
+              make(OpAdd),
+              make(OpReturnValue),
+            ),
+            List(
+              make(OpGetFree, 0),
+              make(OpGetLocal, 0),
+              make(OpClosure, 0, 2),
+              make(OpReturnValue),
+            ),
+            List(
+              make(OpGetLocal, 0),
+              make(OpClosure, 1, 1),
+              make(OpReturnValue),
+            ),
+          ),
+          List(
+            make(OpClosure, 2, 0),
+            make(OpPop),
+          ),
+        ),
+        CTC(
+          """
+                  let global = 55;
+
+                  fn() {
+                  	let a = 66;
+
+                  	fn(){
+                  		let b = 77;
+
+                  		fn(){
+                  			let c = 88;
+
+                  			global + a + b + c;
+                  		}
+                  	}
+                  }
+                  """,
+
+          List(
+            55, 66, 77, 88,
+            List(
+              make(OpConstant, 3),
+              make(OpSetLocal, 0),
+              make(OpGetGlobal, 0),
+              make(OpGetFree, 0),
+              make(OpAdd),
+              make(OpGetFree, 1),
+              make(OpAdd),
+              make(OpGetLocal, 0),
+              make(OpAdd),
+              make(OpReturnValue),
+            ),
+            List(
+              make(OpConstant, 2),
+              make(OpSetLocal, 0),
+              make(OpGetFree, 0),
+              make(OpGetLocal, 0),
+              make(OpClosure, 4, 2),
+              make(OpReturnValue),
+            ),
+            List(
+              make(OpConstant, 1),
+              make(OpSetLocal, 0),
+              make(OpGetLocal, 0),
+              make(OpClosure, 5, 1),
+              make(OpReturnValue),
+            ),
+          ),
+          List(
+            make(OpConstant, 0),
+            make(OpSetGlobal, 0),
+            make(OpClosure, 6, 0),
+            make(OpPop),
+          ),
+        )
+      ).runCompilerTests()
+    }
+    test("recursive functions") {
+      List(
+        CTC(
+          """
+                  let countDown = fn(x) { countDown(x - 1) };
+                  countDown(1);
+                  """,
+          List(
+            1,
+            List(
+              make(OpCurrentClosure),
+              make(OpGetLocal, 0),
+              make(OpConstant, 0),
+              make(OpSub),
+              make(OpCall, 1),
+              make(OpReturnValue),
+            ),
+            1,
+          ),
+          List(
+            make(OpClosure, 1, 0),
+            make(OpSetGlobal, 0),
+            make(OpGetGlobal, 0),
+            make(OpConstant, 2),
+            make(OpCall, 1),
+            make(OpPop),
+          ),
+        ),
+        CTC(
+          """
+                      let wrapper = fn(){
+                      	let countDown = fn(x) { countDown(x - 1); };
+                      	countDown(1);
+                      };
+                      wrapper();
+                      """,
+          List(
+            1,
+            List(
+              make(OpCurrentClosure),
+              make(OpGetLocal, 0),
+              make(OpConstant, 0),
+              make(OpSub),
+              make(OpCall, 1),
+              make(OpReturnValue),
+            ),
+            1,
+            List(
+              make(OpClosure, 1, 0),
+              make(OpSetLocal, 0),
+              make(OpGetLocal, 0),
+              make(OpConstant, 2),
+              make(OpCall, 1),
+              make(OpReturnValue),
+            ),
+          ),
+          List(
+            make(OpClosure, 3, 0),
+            make(OpSetGlobal, 0),
+            make(OpGetGlobal, 0),
+            make(OpCall, 0),
+            make(OpPop),
+          ),
+        )
+      ).runCompilerTests()
+    }
   }
 
   extension[T] (tests: List[CTC[T]]) {
     def runCompilerTests(): Unit = {
       tests.foreach { case CTC(input, expectedConstants, expectedInstructions) =>
-        println(s"input = $input")
+        //        println(s"input = $input")
         val program = parse(input)
         val compiler = MCompiler()
 
@@ -438,6 +766,14 @@ object CompilerTests extends TestSuite {
         testConstants(expectedConstants, bytecode.constants)
       }
     }
+  }
+
+  private def testScopeIndexSize(compiler: MCompiler, scopeIndex: Int): Unit = {
+    scopeIndex ==> compiler.scopeIndex
+  }
+
+  private def testScopeInstructionsSize(compiler: MCompiler, instructionsSize: Int): Unit = {
+    instructionsSize ==> compiler.currentScope.instructions.length
   }
 
   private def testInstructions(expected: List[Instructions], actual: Instructions): Unit = {

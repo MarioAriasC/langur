@@ -37,6 +37,8 @@ package object langur {
   }
 
   def assertInstructions(expected: Instructions, actual: Instructions): Unit = {
+//    println("expected" + expected.mkString("Array(", ", ", ")"))
+//    println("actual" + actual.mkString("Array(", ", ", ")"))
     expected.zipWithIndex.foreach { (byte, i) =>
       byte ==> actual(i)
     }

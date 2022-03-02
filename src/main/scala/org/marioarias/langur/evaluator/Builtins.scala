@@ -10,12 +10,13 @@ import org.marioarias.langur.objects.{MBuiltinFunction, getBuiltinByName, builti
  *         Time: 8:48 AM
  */
 object Builtins {
-  private val builtins = Map(
+  val builtins = Map(
     "len" -> fns.getBuiltinByName("len"),
     "push" -> fns.getBuiltinByName("push"),
     "first" -> fns.getBuiltinByName("first"),
     "last" -> fns.getBuiltinByName("last"),
-    "rest" -> fns.getBuiltinByName("rest")
+    "rest" -> fns.getBuiltinByName("rest"),
+    "puts" -> fns.getBuiltinByName("puts")
   )
 
   def apply(name: String): Option[MBuiltinFunction] = builtins.get(name).flatten

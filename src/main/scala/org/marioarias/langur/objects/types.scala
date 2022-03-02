@@ -148,6 +148,10 @@ val builtins = List(
       }
     }
   },
+  "puts" -> MBuiltinFunction{ args =>
+    args.foreach(arg => println(arg.map(_.inspect()).getOrElse("null")))
+    None
+  },
   "first" -> MBuiltinFunction { args =>
     argSizeCheck(1, args) {
       arrayCheck("first", _) { (array, length) =>
