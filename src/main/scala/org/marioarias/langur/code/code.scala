@@ -63,13 +63,15 @@ extension (i: Instructions) {
   }
 
   def readByte: UB = {
-    val ch = read(0)
+    val ch = i.read(0)
     if (ch < 0) {
       throw IllegalStateException()
     } else {
       ch.u
     }
   }
+
+  def readByte(offset: Int): UB = i.offset(offset).readByte
 
   def read(position: Int): Int = i(position) & 255
 }

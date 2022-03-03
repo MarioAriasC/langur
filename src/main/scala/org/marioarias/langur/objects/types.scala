@@ -111,6 +111,10 @@ class MCompiledFunction(val instructions: Instructions, val numLocals: Int = 0, 
   override def inspect(): String = s"CompiledFunction[$this]"
 }
 
+class MClosure(val fn:MCompiledFunction, val free:List[MObject] = List.empty) extends MObject{
+  override def inspect(): String = s"Closure[$this]"
+}
+
 extension (m: Option[MObject]) {
   def typeDesc(): String = m match {
     case Some(v) => v.typeDesc()
