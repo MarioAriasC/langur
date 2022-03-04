@@ -576,7 +576,6 @@ object VMTests extends TestSuite {
   extension[T] (tests: List[VTC[T]]) {
     def runVmTests(): Unit = {
       tests.foreach { case VTC(input, expected) =>
-        println(input)
         val program = parse(input)
         val compiler = MCompiler()
         compiler.compile(program)

@@ -2,3 +2,4 @@
 target
 *.tasty
 *.class
+langur-*-SNAPSHOT
