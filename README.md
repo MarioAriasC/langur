@@ -1,6 +1,6 @@
 # Langur
 
-A Scala implementation of the [Monkey Language](https://monkeylang.org/)
+A Scala 3 implementation of the [Monkey Language](https://monkeylang.org/)
 
 Langur has 3 sibling implementations:
 
