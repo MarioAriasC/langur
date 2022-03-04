@@ -19,6 +19,6 @@ and [Writing A Compiler in Go](https://compilerbook.com/)) are implemented.
 |----------------------------------|--------------------------------------------------------------------------------------------------------------|
 | [`tests.sh`](tests.sh)           | Run all the tests                                                                                            |
 | [`build.sh`](build.sh)           | Release build                                                                                                |
-| [`benchmarks.sh`](benchmarks.sh) | Run the classic monkey benchmark (`fibonacci(35)`, requires one command (`eval`,`eval-fast`,`vm`,`vm-fast`)) |
+| [`benchmarks.sh`](benchmarks.sh) | Run the classic monkey benchmark (`fibonacci(35)`), requires one command (`eval`,`eval-fast`,`vm`,`vm-fast`)) |
 | [`repl.sh`](repl.sh)             | Run the Langur REPL                                                                                          |
 
