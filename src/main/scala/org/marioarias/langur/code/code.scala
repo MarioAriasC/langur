@@ -1,24 +1,28 @@
 package org.marioarias.langur.code
 
-import org.marioarias.langur.utils.Utils.also
+import scala.annotation.targetName
 
 class UnsignedByte(val byte: Short) extends AnyVal {
   override def toString: String = s"${byte}u"
 
+  @targetName("bitwiseAnd")
   def &(i: Int): Int = byte & i
 
   def toInt: Int = byte
 }
 
-class Definition(val name: String, val operandsWidths: Array[Int] = Array.emptyIntArray) {
+class Definition(
+    val name: String,
+    val operandsWidths: Array[Int] = Array.emptyIntArray
+) {
 
   def canEqual(other: Any): Boolean = other.isInstanceOf[Definition]
 
   override def equals(other: Any): Boolean = other match {
     case that: Definition =>
-      (that canEqual this) &&
-        name == that.name &&
-        (operandsWidths sameElements that.operandsWidths)
+      that.canEqual(this) &&
+      name == that.name &&
+      (operandsWidths sameElements that.operandsWidths)
     case _ => false
   }
 
@@ -27,8 +31,8 @@ class Definition(val name: String, val operandsWidths: Array[Int] = Array.emptyI
     state.map(_.hashCode()).foldLeft(0)((a, b) => 31 * a + b)
   }
 
-
-  override def toString = s"Definition($name, ${operandsWidths.mkString("Array(", ", ", ")")})"
+  override def toString =
+    s"Definition($name, ${operandsWidths.mkString("Array(", ", ", ")")})"
 }
 
 extension (s: String) {
@@ -145,7 +149,10 @@ val definitions = Map(
 )
 
 def lookup(op: Opcode): Definition = {
-  definitions.getOrElse(op, throw IllegalArgumentException(s"opcode $op undefined"))
+  definitions.getOrElse(
+    op,
+    throw IllegalArgumentException(s"opcode $op undefined")
+  )
 }
 
 def make(op: Opcode, operands: Int*): Instructions = {

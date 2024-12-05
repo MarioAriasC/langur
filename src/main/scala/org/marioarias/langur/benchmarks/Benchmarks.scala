@@ -8,13 +8,11 @@ import org.marioarias.langur.objects.MObject
 import org.marioarias.langur.parser.Parser
 import org.marioarias.langur.vm.VM
 
-/**
- * Created by IntelliJ IDEA.
- *
- * @author Mario Arias
- *         Date: 4/3/22
- *         Time: 8:30 AM
- */
+/** Created by IntelliJ IDEA.
+  *
+  * @author
+  *   Mario Arias Date: 4/3/22 Time: 8:30 AM
+  */
 object Benchmarks {
   private val slowInput =
     """
@@ -48,7 +46,9 @@ object Benchmarks {
     val start = System.currentTimeMillis()
     val result = body
     val end = System.currentTimeMillis()
-    println(s"engine=$engine, result=${result.inspect()}, duration=${end - start}ms")
+    println(
+      s"engine=$engine, result=${result.inspect()}, duration=${end - start}ms"
+    )
   }
 
   private def parse(input: String): Program = {

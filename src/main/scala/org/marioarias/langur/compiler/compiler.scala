@@ -7,23 +7,21 @@ import org.marioarias.langur.utils.Utils.also
 
 import scala.collection.mutable
 
-/**
- * Created by IntelliJ IDEA.
- *
- * @author Mario Arias
- *         Date: 26/2/22
- *         Time: 2:01 PM
- */
+/** Created by IntelliJ IDEA.
+  *
+  * @author
+  *   Mario Arias Date: 26/2/22 Time: 2:01 PM
+  */
 class MCompiler(
-                 private val constants: mutable.ListBuffer[MObject] = mutable.ListBuffer.empty[MObject],
-                 var symbolTable: SymbolTable = SymbolTable()
-               ) {
+    private val constants: mutable.ListBuffer[MObject] =
+      mutable.ListBuffer.empty[MObject],
+    var symbolTable: SymbolTable = SymbolTable()
+) {
   builtins.zipWithIndex.foreach { case ((name, _), i) =>
     symbolTable.defineBuiltin(i, name)
   }
   private val scopes = mutable.ListBuffer(CompilationScope())
   var scopeIndex = 0
-
 
   def compile(node: Node): Unit = {
     node match {
@@ -40,23 +38,26 @@ class MCompiler(
           compile(ie.left.get)
           compile(ie.right.get)
           ie.operator match {
-            case "+" => emit(OpAdd)
-            case "-" => emit(OpSub)
-            case "*" => emit(OpMul)
-            case "/" => emit(OpDiv)
-            case ">" => emit(OpGreaterThan)
+            case "+"  => emit(OpAdd)
+            case "-"  => emit(OpSub)
+            case "*"  => emit(OpMul)
+            case "/"  => emit(OpDiv)
+            case ">"  => emit(OpGreaterThan)
             case "==" => emit(OpEqual)
             case "!=" => emit(OpNotEqual)
-            case operator: _ => throw MCompilerException(s"unknown operator $operator")
+            case operator =>
+              throw MCompilerException(s"unknown operator $operator")
           }
         }
-      case il: IntegerLiteral => emit(OpConstant, addConstant(MInteger(il.value)))
+      case il: IntegerLiteral =>
+        emit(OpConstant, addConstant(MInteger(il.value)))
       case pe: PrefixExpression =>
         compile(pe.right.get)
         pe.operator match {
           case "!" => emit(OpBang)
           case "-" => emit(OpMinus)
-          case operator: _ => throw MCompilerException(s"unknown operator $operator")
+          case operator =>
+            throw MCompilerException(s"unknown operator $operator")
         }
       case bl: BooleanLiteral => if (bl.value) emit(OpTrue) else emit(OpFalse)
       case ie: IfExpression =>
@@ -79,7 +80,8 @@ class MCompiler(
         }
         val afterAlternativePos = currentInstructions.length
         changeOperand(jumpPos, afterAlternativePos)
-      case bs: BlockStatement => bs.statements.foreach(_.foreach(statement => compile(statement.get)))
+      case bs: BlockStatement =>
+        bs.statements.foreach(_.foreach(statement => compile(statement.get)))
       case ls: LetStatement =>
         val symbol = symbolTable.define(ls.name.value)
         compile(ls.value.get)
@@ -113,7 +115,9 @@ class MCompiler(
         if (fl.name.nonEmpty) {
           symbolTable.defineFunctionName(fl.name)
         }
-        fl.parameters.foreach(_.foreach(parameter => symbolTable.define(parameter.value)))
+        fl.parameters.foreach(
+          _.foreach(parameter => symbolTable.define(parameter.value))
+        )
         compile(fl.body.get)
         if (isLastInstructionPop) {
           replaceLastPopWithReturn()
@@ -126,7 +130,8 @@ class MCompiler(
         val numLocals = symbolTable.numDefinitions
         val instructions = leaveScope()
         freeSymbols.foreach(loadSymbol)
-        val compiledFn = MCompiledFunction(instructions, numLocals, fl.parameters.get.length)
+        val compiledFn =
+          MCompiledFunction(instructions, numLocals, fl.parameters.get.length)
         emit(OpClosure, addConstant(compiledFn), freeSymbols.length)
       case rs: ReturnStatement =>
         compile(rs.returnValue.get)
@@ -139,7 +144,7 @@ class MCompiler(
   }
 
   def emit(op: Opcode, operands: Int*): Int = {
-    val ins = make(op, operands *)
+    val ins = make(op, operands*)
     val pos = addInstruction(ins)
     setLastInstruction(op, pos)
     pos
@@ -161,10 +166,10 @@ class MCompiler(
 
   private def loadSymbol(symbol: Symbol): Unit = {
     val opcode = symbol.scope match {
-      case SymbolScope.GLOBAL => OpGetGlobal
-      case SymbolScope.LOCAL => OpGetLocal
-      case SymbolScope.BUILTIN => OpGetBuiltin
-      case SymbolScope.FREE => OpGetFree
+      case SymbolScope.GLOBAL   => OpGetGlobal
+      case SymbolScope.LOCAL    => OpGetLocal
+      case SymbolScope.BUILTIN  => OpGetBuiltin
+      case SymbolScope.FREE     => OpGetFree
       case SymbolScope.FUNCTION => OpCurrentClosure
     }
 
@@ -187,7 +192,10 @@ class MCompiler(
     currentScope.lastInstruction.op = OpReturnValue
   }
 
-  private def replaceInstruction(pos: Int, newInstruction: Instructions): Unit = {
+  private def replaceInstruction(
+      pos: Int,
+      newInstruction: Instructions
+  ): Unit = {
     for (i <- newInstruction.indices) {
       currentInstructions(pos + i) = newInstruction(i)
     }
@@ -195,7 +203,8 @@ class MCompiler(
 
   private def isLastInstructionPop: Boolean = lastInstructionIs(OpPop)
 
-  private def lastInstructionIs(op: Opcode) = currentScope.lastInstruction.op == op
+  private def lastInstructionIs(op: Opcode) =
+    currentScope.lastInstruction.op == op
 
   private def removeLastPop(): Unit = {
     val scope = currentScope
@@ -240,9 +249,9 @@ class Bytecode(val instructions: Instructions, val constants: List[MObject]) {
 
   override def equals(other: Any): Boolean = other match {
     case that: Bytecode =>
-      (that canEqual this) &&
-        (instructions sameElements that.instructions) &&
-        constants == that.constants
+      that.canEqual(this) &&
+      (instructions sameElements that.instructions) &&
+      constants == that.constants
     case _ => false
   }
 
@@ -254,18 +263,20 @@ class Bytecode(val instructions: Instructions, val constants: List[MObject]) {
 
 case class EmittedInstruction(var op: Opcode = 0.u, position: Int = 0)
 
-class CompilationScope(var instructions: Instructions = Array[UB](),
-                       var lastInstruction: EmittedInstruction = EmittedInstruction(),
-                       var previousInstruction: EmittedInstruction = EmittedInstruction()) {
+class CompilationScope(
+    var instructions: Instructions = Array[UB](),
+    var lastInstruction: EmittedInstruction = EmittedInstruction(),
+    var previousInstruction: EmittedInstruction = EmittedInstruction()
+) {
 
   def canEqual(other: Any): Boolean = other.isInstanceOf[CompilationScope]
 
   override def equals(other: Any): Boolean = other match {
     case that: CompilationScope =>
-      (that canEqual this) &&
-        instructions == that.instructions &&
-        lastInstruction == that.lastInstruction &&
-        previousInstruction == that.previousInstruction
+      that.canEqual(this) &&
+      instructions == that.instructions &&
+      lastInstruction == that.lastInstruction &&
+      previousInstruction == that.previousInstruction
     case _ => false
   }
 
@@ -276,4 +287,3 @@ class CompilationScope(var instructions: Instructions = Array[UB](),
 }
 
 class MCompilerException(message: String) extends Exception(message)
-

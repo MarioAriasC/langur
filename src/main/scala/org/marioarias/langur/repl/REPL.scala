@@ -1,6 +1,10 @@
 package org.marioarias.langur.repl
 
-import org.marioarias.langur.compiler.{MCompiler, MCompilerException, SymbolTable}
+import org.marioarias.langur.compiler.{
+  MCompiler,
+  MCompilerException,
+  SymbolTable
+}
 import org.marioarias.langur.lexer.Lexer
 import org.marioarias.langur.objects.{MObject, builtins}
 import org.marioarias.langur.parser.Parser
@@ -10,14 +14,11 @@ import java.io.{InputStream, PrintStream}
 import java.util.Scanner
 import scala.collection.mutable
 
-
-/**
- * Created by IntelliJ IDEA.
- *
- * @author Mario Arias
- *         Date: 4/3/22
- *         Time: 12:34 PM
- */
+/** Created by IntelliJ IDEA.
+  *
+  * @author
+  *   Mario Arias Date: 4/3/22 Time: 12:34 PM
+  */
 object REPL {
   val MONKEY_FACE =
     """            __,__
@@ -55,7 +56,7 @@ object REPL {
           val compiler = MCompiler(constants, symbolTable)
           compiler.compile(program)
           val bytecode = compiler.bytecode
-          constants = mutable.ListBuffer(bytecode.constants *)
+          constants = mutable.ListBuffer(bytecode.constants*)
           val machine = VM(bytecode, globals)
           machine.run()
           val stackTop = machine.lastPoppedStackElem
@@ -72,7 +73,10 @@ object REPL {
     }
   }
 
-  private def printParsesErrors(write: String => Unit, errors: List[String]): Unit = {
+  private def printParsesErrors(
+      write: String => Unit,
+      errors: List[String]
+  ): Unit = {
     write(MONKEY_FACE)
     write("Woops! we ran into some monkey business here!")
     write(" parser errors:")

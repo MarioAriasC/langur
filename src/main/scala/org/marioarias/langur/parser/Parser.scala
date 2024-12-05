@@ -6,14 +6,13 @@ import org.marioarias.langur.token.{Token, TokenType}
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
+import scala.compiletime.uninitialized
 
-/**
- * Created by IntelliJ IDEA.
- *
- * @author Mario Arias
- *         Date: 1/2/22
- *         Time: 1:50 PM
- */
+/** Created by IntelliJ IDEA.
+  *
+  * @author
+  *   Mario Arias Date: 1/2/22 Time: 1:50 PM
+  */
 class Parser(lexer: Lexer) {
   nextToken()
   nextToken()
@@ -21,12 +20,13 @@ class Parser(lexer: Lexer) {
   enum Precedence extends Ordered[Precedence] {
     case LOWEST, EQUALS, LESS_GREATER, SUM, PRODUCT, PREFIX, CALL, INDEX
 
-    override def compare(that: Precedence): Int = this.ordinal.compare(that.ordinal)
+    override def compare(that: Precedence): Int =
+      this.ordinal.compare(that.ordinal)
   }
 
   private val innerErrors = ListBuffer.empty[String]
-  private var curToken: Token = _
-  private var peekToken: Token = _
+  private var curToken: Token = uninitialized
+  private var peekToken: Token = uninitialized
 
   private val prefixParsers = Map[TokenType, () => Option[Expression]](
     TokenType.INT -> parseIntegerLiteral,
@@ -42,18 +42,19 @@ class Parser(lexer: Lexer) {
     TokenType.STRING -> parseStringLiteral,
     TokenType.LBRACE -> parseHashLiteral
   )
-  private val infixParsers = Map[TokenType, Option[Expression] => Option[Expression]](
-    TokenType.PLUS -> parseInfixExpression,
-    TokenType.MINUS -> parseInfixExpression,
-    TokenType.SLASH -> parseInfixExpression,
-    TokenType.ASTERISK -> parseInfixExpression,
-    TokenType.EQ -> parseInfixExpression,
-    TokenType.NOT_EQ -> parseInfixExpression,
-    TokenType.LT -> parseInfixExpression,
-    TokenType.GT -> parseInfixExpression,
-    TokenType.LPAREN -> parseCallExpression,
-    TokenType.LBRACKET -> parseIndexExpression
-  )
+  private val infixParsers =
+    Map[TokenType, Option[Expression] => Option[Expression]](
+      TokenType.PLUS -> parseInfixExpression,
+      TokenType.MINUS -> parseInfixExpression,
+      TokenType.SLASH -> parseInfixExpression,
+      TokenType.ASTERISK -> parseInfixExpression,
+      TokenType.EQ -> parseInfixExpression,
+      TokenType.NOT_EQ -> parseInfixExpression,
+      TokenType.LT -> parseInfixExpression,
+      TokenType.GT -> parseInfixExpression,
+      TokenType.LPAREN -> parseCallExpression,
+      TokenType.LBRACKET -> parseIndexExpression
+    )
 
   private val precedences = Map(
     TokenType.EQ -> Precedence.EQUALS,
@@ -93,9 +94,9 @@ class Parser(lexer: Lexer) {
 
   private def parseStatement(): Option[Statement] = {
     curToken.tokenType match {
-      case TokenType.LET => parseLetStatement()
+      case TokenType.LET    => parseLetStatement()
       case TokenType.RETURN => Some(parseReturnStatement())
-      case _ => Some(parseExpressionStatement())
+      case _                => Some(parseExpressionStatement())
     }
   }
 
@@ -115,10 +116,9 @@ class Parser(lexer: Lexer) {
 
     val value = parseExpression(Precedence.LOWEST)
 
-
     value match {
       case Some(literal: FunctionLiteral) => literal.name = name.value
-      case _ =>
+      case _                              =>
     }
 
     if (peekTokenIs(TokenType.SEMICOLON)) {
@@ -127,7 +127,6 @@ class Parser(lexer: Lexer) {
 
     Some(LetStatement(token, name, value))
   }
-
 
   private def parseExpression(precedence: Precedence): Option[Expression] = {
     val prefix = prefixParsers.get(curToken.tokenType)
@@ -183,7 +182,9 @@ class Parser(lexer: Lexer) {
     }
   }
 
-  private def parseBooleanLiteral() = Some(BooleanLiteral(curToken, curTokenIs(TokenType.TRUE)))
+  private def parseBooleanLiteral() = Some(
+    BooleanLiteral(curToken, curTokenIs(TokenType.TRUE))
+  )
 
   private def parseIdentifier() = Some(Identifier(curToken, curToken.literal))
 
@@ -195,7 +196,9 @@ class Parser(lexer: Lexer) {
     Some(PrefixExpression(token, operator, right))
   }
 
-  private def parseInfixExpression(left: Option[Expression]): Option[Expression] = {
+  private def parseInfixExpression(
+      left: Option[Expression]
+  ): Option[Expression] = {
     val token = curToken
     val operator = token.literal
     val precedence = curPrecedence()
@@ -215,13 +218,17 @@ class Parser(lexer: Lexer) {
     }
   }
 
-  private def parseCallExpression(expression: Option[Expression]): Option[Expression] = {
+  private def parseCallExpression(
+      expression: Option[Expression]
+  ): Option[Expression] = {
     val token = curToken
     val arguments = parseExpressionList(TokenType.RPAREN)
     Some(CallExpression(token, expression, arguments))
   }
 
-  private def parseExpressionList(end: TokenType): Option[List[Option[Expression]]] = {
+  private def parseExpressionList(
+      end: TokenType
+  ): Option[List[Option[Expression]]] = {
     val arguments = mutable.ListBuffer.empty[Option[Expression]]
 
     if (peekTokenIs(end)) {
@@ -250,7 +257,9 @@ class Parser(lexer: Lexer) {
     Some(ArrayLiteral(token, parseExpressionList(TokenType.RBRACKET)))
   }
 
-  private def parseIndexExpression(left: Option[Expression]): Option[Expression] = {
+  private def parseIndexExpression(
+      left: Option[Expression]
+  ): Option[Expression] = {
     val token = curToken
     nextToken()
 
@@ -362,7 +371,9 @@ class Parser(lexer: Lexer) {
     Some(parameters.toList)
   }
 
-  private def parseStringLiteral() = Some(StringLiteral(curToken, curToken.literal))
+  private def parseStringLiteral() = Some(
+    StringLiteral(curToken, curToken.literal)
+  )
 
   private def parseHashLiteral(): Option[Expression] = {
     val token = curToken
@@ -395,13 +406,18 @@ class Parser(lexer: Lexer) {
 
   private def curPrecedence(): Precedence = findPrecedence(curToken.tokenType)
 
-  private def findPrecedence(tokenType: TokenType): Precedence = precedences.getOrElse(tokenType, Precedence.LOWEST)
+  private def findPrecedence(tokenType: TokenType): Precedence =
+    precedences.getOrElse(tokenType, Precedence.LOWEST)
 
-  private def noPrefixParserError(tokenType: TokenType): Unit = innerErrors += s"no prefix parser for $tokenType type"
+  private def noPrefixParserError(tokenType: TokenType): Unit =
+    innerErrors += s"no prefix parser for $tokenType type"
 
-  private def peekError(tokenType: TokenType): Unit = innerErrors += s"Expected next token to be $tokenType, got ${peekToken.tokenType} instead"
+  private def peekError(tokenType: TokenType): Unit =
+    innerErrors += s"Expected next token to be $tokenType, got ${peekToken.tokenType} instead"
 
-  private def expectPeek(tokenType: TokenType): Boolean = if (peekTokenIs(tokenType)) {
+  private def expectPeek(tokenType: TokenType): Boolean = if (
+    peekTokenIs(tokenType)
+  ) {
     nextToken()
     true
   } else {
@@ -409,7 +425,8 @@ class Parser(lexer: Lexer) {
     false
   }
 
-  private def peekTokenIs(tokenType: TokenType): Boolean = peekToken.tokenType == tokenType
+  private def peekTokenIs(tokenType: TokenType): Boolean =
+    peekToken.tokenType == tokenType
 
   private def curTokenIs(tokenType: TokenType) = curToken.tokenType == tokenType
 }

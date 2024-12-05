@@ -26,7 +26,10 @@ trait MHashable[T] extends MValue[T] {
   def hashKey(): HashKey = HashKey(hashType, value.hashCode())
 }
 
-class MInteger(value: Long) extends MValue[Long](value) with MHashable[Long] with Ordered[MInteger] {
+class MInteger(value: Long)
+    extends MValue[Long](value)
+    with MHashable[Long]
+    with Ordered[MInteger] {
   override def compare(that: MInteger): Int = value.compareTo(that.value)
 
   def +(other: MInteger): MInteger = MInteger(value + other.value)
@@ -42,7 +45,7 @@ class MInteger(value: Long) extends MValue[Long](value) with MHashable[Long] wit
   override def equals(obj: Any): Boolean = {
     obj match {
       case other: MInteger => value == other.value
-      case _ => false
+      case _               => false
     }
   }
 
@@ -63,7 +66,9 @@ class MReturnValue(val value: MObject) extends MObject {
   override def inspect(): String = value.inspect()
 }
 
-class MBoolean(value: Boolean) extends MValue[Boolean](value) with MHashable[Boolean] {
+class MBoolean(value: Boolean)
+    extends MValue[Boolean](value)
+    with MHashable[Boolean] {
   override def hashType: HashType = HashType.BOOLEAN
 
   override def hashCode(): Int = value.hashCode()
@@ -81,11 +86,18 @@ object MNull extends MObject {
   override def inspect(): String = "null"
 }
 
-class MFunction(val parameters: Option[List[Identifier]], val body: Option[BlockStatement], val env: Environment) extends MObject {
-  override def inspect(): String = s"fn(${parameters.map(_.map(_.toString)).getOrElse(List.empty).mkString(",")}) {\n\t${body.debug()}\n}"
+class MFunction(
+    val parameters: Option[List[Identifier]],
+    val body: Option[BlockStatement],
+    val env: Environment
+) extends MObject {
+  override def inspect(): String =
+    s"fn(${parameters.map(_.map(_.toString)).getOrElse(List.empty).mkString(",")}) {\n\t${body.debug()}\n}"
 }
 
-class MString(value: String) extends MValue[String](value) with MHashable[String] {
+class MString(value: String)
+    extends MValue[String](value)
+    with MHashable[String] {
   override def hashType: HashType = HashType.STRING
 
   def +(that: MString): MString = MString(value + that.value)
@@ -94,31 +106,38 @@ class MString(value: String) extends MValue[String](value) with MHashable[String
 }
 
 class MArray(val elements: List[Option[MObject]]) extends MObject {
-  override def inspect(): String = s"[${elements.map(_.debug()).mkString(", ")}]"
+  override def inspect(): String =
+    s"[${elements.map(_.debug()).mkString(", ")}]"
 }
 
 case class HashPair(key: MObject, value: MObject)
 
 class MHash(val pairs: Map[HashKey, HashPair]) extends MObject {
-  override def inspect(): String = s"{${pairs.values.map(pair => s"${pair.key.inspect()}: ${pair.value.inspect()}").mkString(", ")}}"
+  override def inspect(): String =
+    s"{${pairs.values.map(pair => s"${pair.key.inspect()}: ${pair.value.inspect()}").mkString(", ")}}"
 }
 
 class MBuiltinFunction(val fn: BuiltinFunction) extends MObject {
   override def inspect(): String = "builtin function"
 }
 
-class MCompiledFunction(val instructions: Instructions, val numLocals: Int = 0, val numParameters: Int = 0) extends MObject {
+class MCompiledFunction(
+    val instructions: Instructions,
+    val numLocals: Int = 0,
+    val numParameters: Int = 0
+) extends MObject {
   override def inspect(): String = s"CompiledFunction[$this]"
 }
 
-class MClosure(val fn:MCompiledFunction, val free:List[MObject] = List.empty) extends MObject{
+class MClosure(val fn: MCompiledFunction, val free: List[MObject] = List.empty)
+    extends MObject {
   override def inspect(): String = s"Closure[$this]"
 }
 
 extension (m: Option[MObject]) {
   def typeDesc(): String = m match {
     case Some(v) => v.typeDesc()
-    case None => "null"
+    case None    => "null"
   }
 }
 
@@ -126,7 +145,9 @@ extension (m: MObject) {
   def typeDesc(): String = m.getClass.getSimpleName
 }
 
-private def argSizeCheck(expectedSize: Int, args: List[Option[MObject]])(body: BuiltinFunction): Option[MObject] = {
+private def argSizeCheck(expectedSize: Int, args: List[Option[MObject]])(
+    body: BuiltinFunction
+): Option[MObject] = {
   val length = args.size
   if (length != expectedSize) {
     Some(MError(s"wrong number of arguments. got=$length, want=$expectedSize"))
@@ -135,10 +156,15 @@ private def argSizeCheck(expectedSize: Int, args: List[Option[MObject]])(body: B
   }
 }
 
-private def arrayCheck(name: String, args: List[Option[MObject]])(body: (MArray, Int) => Option[MObject]): Option[MObject] = {
+private def arrayCheck(name: String, args: List[Option[MObject]])(
+    body: (MArray, Int) => Option[MObject]
+): Option[MObject] = {
   args.head match {
     case Some(array: MArray) => body(array, array.elements.size)
-    case nonArray: _ => Some(MError(s"argument to `$name` must be ARRAY, got ${nonArray.typeDesc()}"))
+    case nonArray =>
+      Some(
+        MError(s"argument to `$name` must be ARRAY, got ${nonArray.typeDesc()}")
+      )
   }
 }
 
@@ -147,12 +173,13 @@ val builtins = List(
     argSizeCheck(1, _) { args =>
       args.head match {
         case Some(s: MString) => Some(MInteger(s.value.length.toLong))
-        case Some(a: MArray) => Some(MInteger(a.elements.size.toLong))
-        case e: _ => Some(MError(s"argument to `len` not supported, got ${e.typeDesc()}"))
+        case Some(a: MArray)  => Some(MInteger(a.elements.size.toLong))
+        case e =>
+          Some(MError(s"argument to `len` not supported, got ${e.typeDesc()}"))
       }
     }
   },
-  "puts" -> MBuiltinFunction{ args =>
+  "puts" -> MBuiltinFunction { args =>
     args.foreach(arg => println(arg.map(_.inspect()).getOrElse("null")))
     None
   },

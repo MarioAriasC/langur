@@ -6,13 +6,11 @@ import org.marioarias.langur.objects.*
 import org.marioarias.langur.vm.VM.Null
 import utest.{ArrowAssert, TestSuite, Tests, test}
 
-/**
- * Created by IntelliJ IDEA.
- *
- * @author Mario Arias
- *         Date: 2/3/22
- *         Time: 8:08 AM
- */
+/** Created by IntelliJ IDEA.
+  *
+  * @author
+  *   Mario Arias Date: 2/3/22 Time: 8:08 AM
+  */
 object VMTests extends TestSuite {
   case class VTC[T](input: String, expected: T)
 
@@ -34,7 +32,7 @@ object VMTests extends TestSuite {
         VTC("-5", -5),
         VTC("-10", -10),
         VTC("-50 + 100 + - 50", 0),
-        VTC("(5 + 10 * 2 + 15  / 3) * 2 + - 10", 50),
+        VTC("(5 + 10 * 2 + 15  / 3) * 2 + - 10", 50)
       ).runVmTests()
     }
     test("boolean expressions") {
@@ -63,7 +61,7 @@ object VMTests extends TestSuite {
         VTC("!!true", true),
         VTC("!!false", false),
         VTC("!!5", true),
-        VTC("!(if (false) { 5; })", true),
+        VTC("!(if (false) { 5; })", true)
       ).runVmTests()
     }
     test("conditional") {
@@ -77,45 +75,47 @@ object VMTests extends TestSuite {
         VTC("if (1 > 2) {10} else {20}", 20),
         VTC("if (1 > 2) {10}", Null),
         VTC("if (false) {10}", Null),
-        VTC("if ((if (false) {10})) {10} else {20}", 20),
+        VTC("if ((if (false) {10})) {10} else {20}", 20)
       ).runVmTests()
     }
     test("global let statement") {
       List(
         VTC("let one = 1; one;", 1),
         VTC("let one = 1; let two = 2; one + two", 3),
-        VTC("let one = 1; let two = one + one; one + two", 3),
+        VTC("let one = 1; let two = one + one; one + two", 3)
       ).runVmTests()
     }
     test("string expressions") {
       List(
         VTC(""" "monkey" """, "monkey"),
         VTC(""" "mon" + "key" """, "monkey"),
-        VTC(""" "mon" + "key" + "banana" """, "monkeybanana"),
+        VTC(""" "mon" + "key" + "banana" """, "monkeybanana")
       ).runVmTests()
     }
     test("array literals") {
       List(
         VTC("[]", List.empty),
         VTC("[1, 2, 3]", List(1L, 2L, 3L)),
-        VTC("[1 + 2, 3 * 4, 5 + 6]", List(3L, 12L, 11L)),
+        VTC("[1 + 2, 3 * 4, 5 + 6]", List(3L, 12L, 11L))
       ).runVmTests()
     }
     test("hash literals") {
       List(
         VTC("{}", Map.empty),
         VTC(
-          "{1: 2, 2: 3}", Map(
+          "{1: 2, 2: 3}",
+          Map(
             MInteger(1).hashKey() -> 2L,
             MInteger(2).hashKey() -> 3L
           )
         ),
         VTC(
-          "{1 + 1: 2 * 2, 3 + 3: 4 * 4}", Map(
+          "{1 + 1: 2 * 2, 3 + 3: 4 * 4}",
+          Map(
             MInteger(2).hashKey() -> 4L,
             MInteger(6).hashKey() -> 16L
           )
-        ),
+        )
       ).runVmTests()
     }
     test("index expressions") {
@@ -129,7 +129,7 @@ object VMTests extends TestSuite {
         VTC("{1: 1, 2: 2}[1]", 1),
         VTC("{1: 1, 2: 2}[2]", 2),
         VTC("{1: 1}[0]", Null),
-        VTC("{}[0]", Null),
+        VTC("{}[0]", Null)
       ).runVmTests()
     }
     test("calling functions without arguments") {
@@ -138,14 +138,16 @@ object VMTests extends TestSuite {
           """
                let fivePlusTen = fn() {5 + 10; };
                fivePlusTen()
-               """, 15
+               """,
+          15
         ),
         VTC(
           """
                let one = fn() { 1; }
                let two = fn() { 2; }
                one() + two()
-               """, 3
+               """,
+          3
         ),
         VTC(
           """
@@ -154,8 +156,8 @@ object VMTests extends TestSuite {
               let c = fn () { b() + 1 };
               c();
               """,
-          3,
-        ),
+          3
+        )
       ).runVmTests()
     }
     test("functions with return statement") {
@@ -165,14 +167,14 @@ object VMTests extends TestSuite {
                   let earlyExit = fn() { return 99; 100; };
                   earlyExit();
                   """,
-          99,
+          99
         ),
         VTC(
           """
                   let earlyExit = fn() { return 99; return 100; };
                   earlyExit();
                   """,
-          99,
+          99
         )
       ).runVmTests()
     }
@@ -183,7 +185,7 @@ object VMTests extends TestSuite {
                   let noReturn = fn() {};
                   noReturn();
                   """,
-          Null,
+          Null
         ),
         VTC(
           """
@@ -192,8 +194,8 @@ object VMTests extends TestSuite {
                   noReturn();
                   noReturnTwo();
                   """,
-          Null,
-        ),
+          Null
+        )
       ).runVmTests()
     }
     test("first class functions") {
@@ -204,7 +206,7 @@ object VMTests extends TestSuite {
                   let returnsOneReturner = fn() {returnsOne;}
                   returnsOneReturner()();
                   """,
-          1,
+          1
         ),
         VTC(
           """
@@ -216,9 +218,8 @@ object VMTests extends TestSuite {
                   }
                   returnsOneReturner()();
                   """,
-
-          1,
-        ),
+          1
+        )
       ).runVmTests()
     }
     test("calling functions with bindings") {
@@ -228,7 +229,7 @@ object VMTests extends TestSuite {
                   let one = fn() { let one = 1; one;};
                   one();
                   """,
-          1,
+          1
         ),
         VTC(
           """
@@ -239,7 +240,7 @@ object VMTests extends TestSuite {
                   };
                   oneAndTwo();
                   """,
-          3,
+          3
         ),
         VTC(
           """
@@ -255,7 +256,7 @@ object VMTests extends TestSuite {
                   };
                   oneAndTwo() + threeAndFour();
                   """,
-          10,
+          10
         ),
         VTC(
           """
@@ -270,7 +271,7 @@ object VMTests extends TestSuite {
                   };
                   firstFoobar() + secondFoobar();
                   """,
-          150,
+          150
         ),
         VTC(
           """
@@ -285,8 +286,8 @@ object VMTests extends TestSuite {
                   };
                   minusOne() + minusTwo();
                   """,
-          97,
-        ),
+          97
+        )
       ).runVmTests()
     }
     test("calling functions with arguments and bindings") {
@@ -296,14 +297,14 @@ object VMTests extends TestSuite {
                   let identity = fn(a) { a; };
                   identity(4);
                   """,
-          4,
+          4
         ),
         VTC(
           """
                   let sum = fn(a, b) { a + b; };
                   sum(1, 2);
                   """,
-          3,
+          3
         ),
         VTC(
           """
@@ -313,7 +314,7 @@ object VMTests extends TestSuite {
                   }
                   sum(1, 2);
                   """,
-          3,
+          3
         ),
         VTC(
           """
@@ -323,7 +324,7 @@ object VMTests extends TestSuite {
                   }
                   sum(1, 2) + sum(3, 4);
                   """,
-          10,
+          10
         ),
         VTC(
           """
@@ -336,7 +337,7 @@ object VMTests extends TestSuite {
                   };
                   outer();
                   """,
-          10,
+          10
         ),
         VTC(
           """
@@ -350,24 +351,24 @@ object VMTests extends TestSuite {
                   };
                   outer() + globalNum;
                   """,
-          50,
-        ),
+          50
+        )
       ).runVmTests()
     }
     test("calling functions with wrong arguments") {
       List(
         VTC(
           "fn() {1;}(1);",
-          "wrong number of arguments: want=0, got=1",
+          "wrong number of arguments: want=0, got=1"
         ),
         VTC(
           "fn(a) {a;}();",
-          "wrong number of arguments: want=1, got=0",
+          "wrong number of arguments: want=1, got=0"
         ),
         VTC(
           "fn(a, b) {a + b;}(1);",
-          "wrong number of arguments: want=2, got=1",
-        ),
+          "wrong number of arguments: want=2, got=1"
+        )
       ).foreach { case VTC(input, expected) =>
         val program = parse(input)
         val compiler = MCompiler()
@@ -389,12 +390,14 @@ object VMTests extends TestSuite {
         VTC("len(\"four\")", 4),
         VTC("len(\"hello world\")", 11),
         VTC(
-          "len(1)", MError(
-            "argument to `len` not supported, got MInteger",
+          "len(1)",
+          MError(
+            "argument to `len` not supported, got MInteger"
           )
         ),
         VTC(
-          "len(\"one\", \"two\")", MError(
+          "len(\"one\", \"two\")",
+          MError(
             "wrong number of arguments. got=2, want=1"
           )
         ),
@@ -404,14 +407,16 @@ object VMTests extends TestSuite {
         VTC("first([1, 2, 3])", 1),
         VTC("first([])", Null),
         VTC(
-          "first(1)", MError(
+          "first(1)",
+          MError(
             "argument to `first` must be ARRAY, got MInteger"
           )
         ),
         VTC("last([1, 2, 3])", 3),
         VTC("last([])", Null),
         VTC(
-          "last(1)", MError(
+          "last(1)",
+          MError(
             "argument to `last` must be ARRAY, got MInteger"
           )
         ),
@@ -419,10 +424,11 @@ object VMTests extends TestSuite {
         VTC("rest([])", Null),
         VTC("push([], 1)", List(1L)),
         VTC(
-          "push(1, 1)", MError(
+          "push(1, 1)",
+          MError(
             "argument to `push` must be ARRAY, got MInteger"
           )
-        ),
+        )
       ).runVmTests()
     }
     test("closures") {
@@ -435,7 +441,7 @@ object VMTests extends TestSuite {
                   let closure = newClosure(99);
                   closure();
                   """,
-          99,
+          99
         ),
         VTC(
           """
@@ -445,7 +451,7 @@ object VMTests extends TestSuite {
                       let adder = newAdder (1, 2);
                       adder(8);
                       """,
-          11,
+          11
         ),
         VTC(
           """
@@ -456,7 +462,7 @@ object VMTests extends TestSuite {
                       let adder = newAdder (1, 2);
                       adder(8);
                       """,
-          11,
+          11
         ),
         VTC(
           """
@@ -471,7 +477,7 @@ object VMTests extends TestSuite {
                       let adder = newAdderInner (3);
                       adder(8);
                       """,
-          14,
+          14
         ),
         VTC(
           """
@@ -485,7 +491,7 @@ object VMTests extends TestSuite {
                       let adder = newAdderInner (3);
                       adder(8);
                       """,
-          14,
+          14
         ),
         VTC(
           """
@@ -497,7 +503,7 @@ object VMTests extends TestSuite {
                       let closure = newClosure (9, 90);
                       closure();
                       """,
-          99,
+          99
         )
       ).runVmTests()
     }
@@ -514,7 +520,7 @@ object VMTests extends TestSuite {
                   }
                   countDown(1);
                   """,
-          0,
+          0
         ),
         VTC(
           """
@@ -530,7 +536,7 @@ object VMTests extends TestSuite {
                   };
                   wrapper();
                   """,
-          0,
+          0
         ),
         VTC(
           """
@@ -567,13 +573,14 @@ object VMTests extends TestSuite {
       };
       fibonacci(15);
 
-              """.stripMargin, 610
+              """.stripMargin,
+          610
         )
       ).runVmTests()
     }
   }
 
-  extension[T] (tests: List[VTC[T]]) {
+  extension [T](tests: List[VTC[T]]) {
     def runVmTests(): Unit = {
       tests.foreach { case VTC(input, expected) =>
         val program = parse(input)
@@ -589,10 +596,10 @@ object VMTests extends TestSuite {
 
   private def testExpectedObject[T](expected: T, actual: MObject): Unit = {
     expected match {
-      case i: Int => testIntegerObject(i, actual)
+      case i: Int     => testIntegerObject(i, actual)
       case b: Boolean => testBooleanObject(b, actual)
-      case MNull => MNull ==> actual
-      case s: String => testStringObject(s, actual)
+      case MNull      => MNull ==> actual
+      case s: String  => testStringObject(s, actual)
       case l: List[?] =>
         checkType(actual) { (array: MArray) =>
           array.elements.length ==> l.length
@@ -609,9 +616,10 @@ object VMTests extends TestSuite {
             testIntegerObject(expectedValue.asInstanceOf[Long], pair.value)
           }
         }
-      case e: MError => checkType(actual) { (error: MError) =>
-        error.message ==> e.message
-      }
+      case e: MError =>
+        checkType(actual) { (error: MError) =>
+          error.message ==> e.message
+        }
     }
   }
 

@@ -3,21 +3,21 @@ package org.marioarias.langur.compiler
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-/**
- * Created by IntelliJ IDEA.
- *
- * @author Mario Arias
- *         Date: 27/2/22
- *         Time: 1:35 PM
- */
+/** Created by IntelliJ IDEA.
+  *
+  * @author
+  *   Mario Arias Date: 27/2/22 Time: 1:35 PM
+  */
 case class Symbol(name: String, scope: SymbolScope, index: Int)
 
 enum SymbolScope {
   case GLOBAL, LOCAL, BUILTIN, FREE, FUNCTION
 }
 
-class SymbolTable(private val store: mutable.HashMap[String, Symbol] = mutable.HashMap.empty,
-                  val outer: Option[SymbolTable] = None) {
+class SymbolTable(
+    private val store: mutable.HashMap[String, Symbol] = mutable.HashMap.empty,
+    val outer: Option[SymbolTable] = None
+) {
   var numDefinitions = 0
   val freeSymbols: mutable.ListBuffer[Symbol] = mutable.ListBuffer.empty[Symbol]
 
@@ -33,14 +33,14 @@ class SymbolTable(private val store: mutable.HashMap[String, Symbol] = mutable.H
     symbol
   }
 
-  def defineBuiltin(index:Int, name: String): Symbol = {
+  def defineBuiltin(index: Int, name: String): Symbol = {
     val stored = store.get(name)
     stored match {
-      case None => 
+      case None =>
         val symbol = Symbol(name, SymbolScope.BUILTIN, index)
         store(name) = symbol
         symbol
-      case Some(symbol:Symbol) => symbol  
+      case Some(symbol: Symbol) => symbol
     }
   }
 
@@ -51,7 +51,9 @@ class SymbolTable(private val store: mutable.HashMap[String, Symbol] = mutable.H
         outer match {
           case Some(out: SymbolTable) =>
             val symbol = out.resolve(name)
-            if (symbol.scope == SymbolScope.GLOBAL || symbol.scope == SymbolScope.BUILTIN) {
+            if (
+              symbol.scope == SymbolScope.GLOBAL || symbol.scope == SymbolScope.BUILTIN
+            ) {
               symbol
             } else {
               defineFree(symbol)

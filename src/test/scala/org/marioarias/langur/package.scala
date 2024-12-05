@@ -10,14 +10,14 @@ import utest.ArrowAssert
 import scala.reflect.{ClassTag, classTag}
 
 /** Created by IntelliJ IDEA.
- *
- * @author
- * Mario Arias Date: 1/2/22 Time: 1:57 PM
- */
+  *
+  * @author
+  *   Mario Arias Date: 1/2/22 Time: 1:57 PM
+  */
 package object langur {
   def checkType[T: ClassTag](value: Any)(block: T => Unit): Unit = {
     value match {
-      case t: T => block(t)
+      case t: T       => block(t)
       case Some(t: T) => block(t)
       case _ =>
         fail(
@@ -29,7 +29,9 @@ package object langur {
   def fail(message: String) = throw new RuntimeException(message)
 
   extension (l: List[Instructions]) {
-    def concatInstructions: Instructions = l.fold(Array[UB]()) { (acc, bytes) => acc ++ bytes }
+    def concatInstructions: Instructions = l.fold(Array[UB]()) { (acc, bytes) =>
+      acc ++ bytes
+    }
   }
 
   def parse(input: String): Program = {
@@ -54,7 +56,7 @@ package object langur {
   def testStringObject(expected: String, actual: MObject): Unit = {
     actual match {
       case s: MString => expected ==> s.value
-      case _ => fail(s"object is not String. got=${actual.typeDesc()}")
+      case _          => fail(s"object is not String. got=${actual.typeDesc()}")
     }
   }
 }

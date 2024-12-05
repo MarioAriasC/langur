@@ -3,3 +3,7 @@ target
 *.tasty
 *.class
 langur-*-SNAPSHOT
+.idea
+.bloop
+.metals
+metals.sbt

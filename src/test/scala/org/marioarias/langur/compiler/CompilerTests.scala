@@ -5,16 +5,18 @@ import org.marioarias.langur.code.*
 import org.marioarias.langur.objects.{MCompiledFunction, MObject, typeDesc}
 import utest.{ArrowAssert, TestSuite, Tests, test}
 
-/**
- * Created by IntelliJ IDEA.
- *
- * @author Mario Arias
- *         Date: 26/2/22
- *         Time: 1:44 PM
- */
+/** Created by IntelliJ IDEA.
+  *
+  * @author
+  *   Mario Arias Date: 26/2/22 Time: 1:44 PM
+  */
 object CompilerTests extends TestSuite {
 
-  case class CTC[T](input: String, expectedConstants: List[T], expectedInstructions: List[Instructions])
+  case class CTC[T](
+      input: String,
+      expectedConstants: List[T],
+      expectedInstructions: List[Instructions]
+  )
 
   override def tests: Tests = Tests {
     test("integer arithmetic") {
@@ -210,7 +212,7 @@ object CompilerTests extends TestSuite {
             make(OpConstant, 0),
             make(OpSetGlobal, 0),
             make(OpConstant, 1),
-            make(OpSetGlobal, 1),
+            make(OpSetGlobal, 1)
           )
         ),
         CTC(
@@ -220,7 +222,7 @@ object CompilerTests extends TestSuite {
             make(OpConstant, 0),
             make(OpSetGlobal, 0),
             make(OpGetGlobal, 0),
-            make(OpPop),
+            make(OpPop)
           )
         ),
         CTC(
@@ -232,7 +234,7 @@ object CompilerTests extends TestSuite {
             make(OpGetGlobal, 0),
             make(OpSetGlobal, 1),
             make(OpGetGlobal, 1),
-            make(OpPop),
+            make(OpPop)
           )
         )
       ).runCompilerTests()
@@ -296,7 +298,7 @@ object CompilerTests extends TestSuite {
             make(OpArray, 3),
             make(OpPop)
           )
-        ),
+        )
       ).runCompilerTests()
     }
     test("hash literal") {
@@ -379,7 +381,9 @@ object CompilerTests extends TestSuite {
         CTC(
           "fn() {return 5 + 10 }",
           List(
-            5, 10, List(
+            5,
+            10,
+            List(
               make(OpConstant, 0),
               make(OpConstant, 1),
               make(OpAdd),
@@ -394,7 +398,9 @@ object CompilerTests extends TestSuite {
         CTC(
           "fn() { 5 + 10 }",
           List(
-            5, 10, List(
+            5,
+            10,
+            List(
               make(OpConstant, 0),
               make(OpConstant, 1),
               make(OpAdd),
@@ -409,17 +415,19 @@ object CompilerTests extends TestSuite {
         CTC(
           "fn() {1; 2}",
           List(
-            1, 2, List(
+            1,
+            2,
+            List(
               make(OpConstant, 0),
               make(OpPop),
               make(OpConstant, 1),
-              make(OpReturnValue),
+              make(OpReturnValue)
             )
           ),
           List(
             make(OpClosure, 2, 0),
-            make(OpPop),
-          ),
+            make(OpPop)
+          )
         )
       ).runCompilerTests()
     }
@@ -466,9 +474,10 @@ object CompilerTests extends TestSuite {
       fn() { num }
                   """.stripMargin,
           List(
-            55, List(
+            55,
+            List(
               make(OpGetGlobal, 0),
-              make(OpReturnValue),
+              make(OpReturnValue)
             )
           ),
           List(
@@ -491,7 +500,7 @@ object CompilerTests extends TestSuite {
               make(OpConstant, 0),
               make(OpSetLocal, 0),
               make(OpGetLocal, 0),
-              make(OpReturnValue),
+              make(OpReturnValue)
             )
           ),
           List(
@@ -508,7 +517,9 @@ object CompilerTests extends TestSuite {
       }
                       """.stripMargin,
           List(
-            55, 77, List(
+            55,
+            77,
+            List(
               make(OpConstant, 0),
               make(OpSetLocal, 0),
               make(OpConstant, 1),
@@ -516,7 +527,7 @@ object CompilerTests extends TestSuite {
               make(OpGetLocal, 0),
               make(OpGetLocal, 1),
               make(OpAdd),
-              make(OpReturnValue),
+              make(OpReturnValue)
             )
           ),
           List(
@@ -578,17 +589,17 @@ object CompilerTests extends TestSuite {
               make(OpGetFree, 0),
               make(OpGetLocal, 0),
               make(OpAdd),
-              make(OpReturnValue),
+              make(OpReturnValue)
             ),
             List(
               make(OpGetLocal, 0),
               make(OpClosure, 0, 1),
-              make(OpReturnValue),
+              make(OpReturnValue)
             )
           ),
           List(
             make(OpClosure, 1, 0),
-            make(OpPop),
+            make(OpPop)
           )
         ),
         CTC(
@@ -608,24 +619,24 @@ object CompilerTests extends TestSuite {
               make(OpAdd),
               make(OpGetLocal, 0),
               make(OpAdd),
-              make(OpReturnValue),
+              make(OpReturnValue)
             ),
             List(
               make(OpGetFree, 0),
               make(OpGetLocal, 0),
               make(OpClosure, 0, 2),
-              make(OpReturnValue),
+              make(OpReturnValue)
             ),
             List(
               make(OpGetLocal, 0),
               make(OpClosure, 1, 1),
-              make(OpReturnValue),
-            ),
+              make(OpReturnValue)
+            )
           ),
           List(
             make(OpClosure, 2, 0),
-            make(OpPop),
-          ),
+            make(OpPop)
+          )
         ),
         CTC(
           """
@@ -645,9 +656,11 @@ object CompilerTests extends TestSuite {
                   	}
                   }
                   """,
-
           List(
-            55, 66, 77, 88,
+            55,
+            66,
+            77,
+            88,
             List(
               make(OpConstant, 3),
               make(OpSetLocal, 0),
@@ -658,7 +671,7 @@ object CompilerTests extends TestSuite {
               make(OpAdd),
               make(OpGetLocal, 0),
               make(OpAdd),
-              make(OpReturnValue),
+              make(OpReturnValue)
             ),
             List(
               make(OpConstant, 2),
@@ -666,22 +679,22 @@ object CompilerTests extends TestSuite {
               make(OpGetFree, 0),
               make(OpGetLocal, 0),
               make(OpClosure, 4, 2),
-              make(OpReturnValue),
+              make(OpReturnValue)
             ),
             List(
               make(OpConstant, 1),
               make(OpSetLocal, 0),
               make(OpGetLocal, 0),
               make(OpClosure, 5, 1),
-              make(OpReturnValue),
-            ),
+              make(OpReturnValue)
+            )
           ),
           List(
             make(OpConstant, 0),
             make(OpSetGlobal, 0),
             make(OpClosure, 6, 0),
-            make(OpPop),
-          ),
+            make(OpPop)
+          )
         )
       ).runCompilerTests()
     }
@@ -700,9 +713,9 @@ object CompilerTests extends TestSuite {
               make(OpConstant, 0),
               make(OpSub),
               make(OpCall, 1),
-              make(OpReturnValue),
+              make(OpReturnValue)
             ),
-            1,
+            1
           ),
           List(
             make(OpClosure, 1, 0),
@@ -710,8 +723,8 @@ object CompilerTests extends TestSuite {
             make(OpGetGlobal, 0),
             make(OpConstant, 2),
             make(OpCall, 1),
-            make(OpPop),
-          ),
+            make(OpPop)
+          )
         ),
         CTC(
           """
@@ -729,7 +742,7 @@ object CompilerTests extends TestSuite {
               make(OpConstant, 0),
               make(OpSub),
               make(OpCall, 1),
-              make(OpReturnValue),
+              make(OpReturnValue)
             ),
             1,
             List(
@@ -738,32 +751,33 @@ object CompilerTests extends TestSuite {
               make(OpGetLocal, 0),
               make(OpConstant, 2),
               make(OpCall, 1),
-              make(OpReturnValue),
-            ),
+              make(OpReturnValue)
+            )
           ),
           List(
             make(OpClosure, 3, 0),
             make(OpSetGlobal, 0),
             make(OpGetGlobal, 0),
             make(OpCall, 0),
-            make(OpPop),
-          ),
+            make(OpPop)
+          )
         )
       ).runCompilerTests()
     }
   }
 
-  extension[T] (tests: List[CTC[T]]) {
+  extension [T](tests: List[CTC[T]]) {
     def runCompilerTests(): Unit = {
-      tests.foreach { case CTC(input, expectedConstants, expectedInstructions) =>
-        //        println(s"input = $input")
-        val program = parse(input)
-        val compiler = MCompiler()
+      tests.foreach {
+        case CTC(input, expectedConstants, expectedInstructions) =>
+          //        println(s"input = $input")
+          val program = parse(input)
+          val compiler = MCompiler()
 
-        compiler.compile(program)
-        val bytecode = compiler.bytecode
-        testInstructions(expectedInstructions, bytecode.instructions)
-        testConstants(expectedConstants, bytecode.constants)
+          compiler.compile(program)
+          val bytecode = compiler.bytecode
+          testInstructions(expectedInstructions, bytecode.instructions)
+          testConstants(expectedConstants, bytecode.constants)
       }
     }
   }
@@ -772,27 +786,41 @@ object CompilerTests extends TestSuite {
     scopeIndex ==> compiler.scopeIndex
   }
 
-  private def testScopeInstructionsSize(compiler: MCompiler, instructionsSize: Int): Unit = {
+  private def testScopeInstructionsSize(
+      compiler: MCompiler,
+      instructionsSize: Int
+  ): Unit = {
     instructionsSize ==> compiler.currentScope.instructions.length
   }
 
-  private def testInstructions(expected: List[Instructions], actual: Instructions): Unit = {
+  private def testInstructions(
+      expected: List[Instructions],
+      actual: Instructions
+  ): Unit = {
     val concatenated = expected.concatInstructions
 
     concatenated.length ==> actual.length
     assertInstructions(concatenated, actual)
   }
 
-  private def testConstants[T](expected: List[T], actual: List[MObject]): Unit = {
+  private def testConstants[T](
+      expected: List[T],
+      actual: List[MObject]
+  ): Unit = {
     expected.length ==> actual.length
     expected.zipWithIndex.foreach { (constant, i) =>
       constant match {
-        case l: Int => testIntegerObject(l, actual(i))
+        case l: Int    => testIntegerObject(l, actual(i))
         case s: String => testStringObject(s, actual(i))
         case l: List[?] =>
           actual(i) match {
-            case cf: MCompiledFunction => testInstructions(l.asInstanceOf[List[Instructions]], cf.instructions)
-            case act: _ => fail(s"constant $act - not a function, got = ${act.typeDesc()}")
+            case cf: MCompiledFunction =>
+              testInstructions(
+                l.asInstanceOf[List[Instructions]],
+                cf.instructions
+              )
+            case act =>
+              fail(s"constant $act - not a function, got = ${act.typeDesc()}")
           }
       }
     }
