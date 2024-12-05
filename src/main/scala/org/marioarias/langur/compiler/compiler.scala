@@ -47,7 +47,7 @@ class MCompiler(
             case ">" => emit(OpGreaterThan)
             case "==" => emit(OpEqual)
             case "!=" => emit(OpNotEqual)
-            case operator: _ => throw MCompilerException(s"unknown operator $operator")
+            case operator => throw MCompilerException(s"unknown operator $operator")
           }
         }
       case il: IntegerLiteral => emit(OpConstant, addConstant(MInteger(il.value)))
@@ -56,7 +56,7 @@ class MCompiler(
         pe.operator match {
           case "!" => emit(OpBang)
           case "-" => emit(OpMinus)
-          case operator: _ => throw MCompilerException(s"unknown operator $operator")
+          case operator => throw MCompilerException(s"unknown operator $operator")
         }
       case bl: BooleanLiteral => if (bl.value) emit(OpTrue) else emit(OpFalse)
       case ie: IfExpression =>
@@ -240,7 +240,7 @@ class Bytecode(val instructions: Instructions, val constants: List[MObject]) {
 
   override def equals(other: Any): Boolean = other match {
     case that: Bytecode =>
-      (that canEqual this) &&
+      that.canEqual(this) &&
         (instructions sameElements that.instructions) &&
         constants == that.constants
     case _ => false
@@ -262,7 +262,7 @@ class CompilationScope(var instructions: Instructions = Array[UB](),
 
   override def equals(other: Any): Boolean = other match {
     case that: CompilationScope =>
-      (that canEqual this) &&
+      that.canEqual(this) &&
         instructions == that.instructions &&
         lastInstruction == that.lastInstruction &&
         previousInstruction == that.previousInstruction

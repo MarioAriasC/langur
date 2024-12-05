@@ -3,3 +3,4 @@ target
 *.tasty
 *.class
 langur-*-SNAPSHOT
+.idea

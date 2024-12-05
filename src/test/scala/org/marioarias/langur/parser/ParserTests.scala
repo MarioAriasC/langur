@@ -64,7 +64,7 @@ object ParserTests extends TestSuite {
           case Some(i: IntegerLiteral) =>
             i.value ==> 5.toLong
             i.tokenLiteral() ==> "5"
-          case e: _ => fail(s"statement.expression not IntegerLiteral .got=${e.getClass.getSimpleName}")
+          case e => fail(s"statement.expression not IntegerLiteral .got=${e.getClass.getSimpleName}")
         }
       }
     }

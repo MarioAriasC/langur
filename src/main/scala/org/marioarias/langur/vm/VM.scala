@@ -312,7 +312,7 @@ class VM(bytecode: Bytecode, private val globals: mutable.ListBuffer[MObject] = 
         }.toList
         sp -= numFree
         push(MClosure(cf, free))
-      case c: _ => throw VMException(s"not a function $c")
+      case c => throw VMException(s"not a function $c")
     }
   }
 

@@ -138,7 +138,7 @@ private def argSizeCheck(expectedSize: Int, args: List[Option[MObject]])(body: B
 private def arrayCheck(name: String, args: List[Option[MObject]])(body: (MArray, Int) => Option[MObject]): Option[MObject] = {
   args.head match {
     case Some(array: MArray) => body(array, array.elements.size)
-    case nonArray: _ => Some(MError(s"argument to `$name` must be ARRAY, got ${nonArray.typeDesc()}"))
+    case nonArray => Some(MError(s"argument to `$name` must be ARRAY, got ${nonArray.typeDesc()}"))
   }
 }
 
@@ -148,7 +148,7 @@ val builtins = List(
       args.head match {
         case Some(s: MString) => Some(MInteger(s.value.length.toLong))
         case Some(a: MArray) => Some(MInteger(a.elements.size.toLong))
-        case e: _ => Some(MError(s"argument to `len` not supported, got ${e.typeDesc()}"))
+        case e => Some(MError(s"argument to `len` not supported, got ${e.typeDesc()}"))
       }
     }
   },

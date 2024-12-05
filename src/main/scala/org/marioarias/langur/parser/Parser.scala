@@ -6,6 +6,7 @@ import org.marioarias.langur.token.{Token, TokenType}
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
+import scala.compiletime.uninitialized
 
 /**
  * Created by IntelliJ IDEA.
@@ -25,8 +26,8 @@ class Parser(lexer: Lexer) {
   }
 
   private val innerErrors = ListBuffer.empty[String]
-  private var curToken: Token = _
-  private var peekToken: Token = _
+  private var curToken: Token = uninitialized
+  private var peekToken: Token = uninitialized
 
   private val prefixParsers = Map[TokenType, () => Option[Expression]](
     TokenType.INT -> parseIntegerLiteral,

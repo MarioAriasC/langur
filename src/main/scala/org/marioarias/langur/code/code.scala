@@ -1,10 +1,11 @@
 package org.marioarias.langur.code
 
-import org.marioarias.langur.utils.Utils.also
+import scala.annotation.targetName
 
 class UnsignedByte(val byte: Short) extends AnyVal {
   override def toString: String = s"${byte}u"
 
+  @targetName("bitwiseAnd")
   def &(i: Int): Int = byte & i
 
   def toInt: Int = byte
@@ -16,7 +17,7 @@ class Definition(val name: String, val operandsWidths: Array[Int] = Array.emptyI
 
   override def equals(other: Any): Boolean = other match {
     case that: Definition =>
-      (that canEqual this) &&
+      that.canEqual(this) &&
         name == that.name &&
         (operandsWidths sameElements that.operandsWidths)
     case _ => false

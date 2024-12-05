@@ -2,9 +2,10 @@ package org.marioarias.langur.evaluator
 
 import org.marioarias.langur.ast.*
 import org.marioarias.langur.objects.*
-import org.marioarias.langur.utils.Utils.also
 
 import scala.collection.mutable
+import scala.util.boundary
+import scala.util.boundary.break
 
 /**
  * Created by IntelliJ IDEA.
@@ -19,7 +20,7 @@ object Evaluator {
   val FALSE: MBoolean = MBoolean(false)
 
   extension (b: Boolean) {
-    def toMonkey: MBoolean = if (b) TRUE else FALSE
+    private def toMonkey: MBoolean = if (b) TRUE else FALSE
   }
 
   def eval(node: Option[Node], env: Environment): Option[MObject] = {
@@ -53,16 +54,19 @@ object Evaluator {
       case i: Identifier => Some(evalIdentifier(i, env))
       case s: StringLiteral => Some(MString(s.value))
       case i: IndexExpression =>
-        val left = eval(i.left, env)
-        if (left.isError) {
-          return left
+        boundary{
+          val left = eval(i.left, env)
+          if (left.isError) {
+            break(left)
+          }
+
+          val index = eval(i.index, env)
+          if (index.isError) {
+            break(index)
+          }
+          evalIndexExpression(left, index)
         }
 
-        val index = eval(i.index, env)
-        if (index.isError) {
-          return index
-        }
-        evalIndexExpression(left, index)
       case h: HashLiteral => evalHashLiteral(h, env)
       case a: ArrayLiteral =>
         val elements = evalExpressions(a.elements, env)
@@ -77,16 +81,19 @@ object Evaluator {
 
   private def evalProgram(statements: List[Statement], env: Environment): Option[MObject] = {
     var result: Option[MObject] = None
-    statements.foreach { statement =>
-      result = eval(Some(statement), env)
+    boundary {
+      statements.foreach { statement =>
+        result = eval(Some(statement), env)
 
-      result.foreach {
-        case r: MReturnValue => return Some(r.value)
-        case e: MError => return Some(e)
-        case _ => //Nothing
+        result.foreach {
+          case r: MReturnValue => break(Some(r.value))
+          case e: MError => break(Some(e))
+          case _ => //Nothing
+        }
       }
+      result
     }
-    result
+
   }
 
   private def evalPrefixExpression(operator: String, right: MObject): MObject = {
@@ -150,14 +157,14 @@ object Evaluator {
     }
   }
 
-  private def evalBlockStatement(block: BlockStatement, env: Environment): Option[MObject] = {
+  private def evalBlockStatement(block: BlockStatement, env: Environment): Option[MObject] = boundary {
     var result: Option[MObject] = None
     for statements <- block.statements yield {
       statements.foreach { statement =>
         result = eval(statement, env)
         result.map { some =>
           if (some.isInstanceOf[MReturnValue] || some.isInstanceOf[MError]) {
-            return result
+            break(result)
           }
         }
       }
@@ -166,18 +173,18 @@ object Evaluator {
   }
 
   extension (o: Option[MObject]) {
-    def isError: Boolean = o match {
+    private def isError: Boolean = o match {
       case Some(e: MError) => true
       case Some(_) => false
       case None => false
     }
   }
 
-  private def evalExpressions(arguments: Option[List[Option[Expression]]], env: Environment): List[Option[MObject]] = {
+  private def evalExpressions(arguments: Option[List[Option[Expression]]], env: Environment): List[Option[MObject]] = boundary {
     arguments.map(_.map { argument =>
       val evaluated = eval(argument, env)
       if (evaluated.isError) {
-        return List(evaluated)
+        break(List(evaluated))
       }
       evaluated
     }).getOrElse(List.empty)
@@ -245,22 +252,24 @@ object Evaluator {
 
   private def evalHashLiteral(hash: HashLiteral, env: Environment): Option[MObject] = {
     val pairs = mutable.HashMap.empty[HashKey, HashPair]
-    hash.pairs.foreach { (keyNode, valueNode) =>
-      val key = eval(Some(keyNode), env)
-      if (key.isError) {
-        return key
+    boundary {
+      hash.pairs.foreach { (keyNode, valueNode) =>
+        val key = eval(Some(keyNode), env)
+        if (key.isError) {
+          break(key)
+        }
+        key match {
+          case Some(hashable: MHashable[?]) =>
+            val value = eval(Some(valueNode), env)
+            if (value.isError) {
+              break(value)
+            }
+            pairs(hashable.hashKey()) = HashPair(hashable, value.get)
+          case _ => break(Some(MError(s"unusable as a hash key: ${key.typeDesc()}")))
+        }
       }
-      key match {
-        case Some(hashable: MHashable[?]) =>
-          val value = eval(Some(valueNode), env)
-          if (value.isError) {
-            return value
-          }
-          pairs(hashable.hashKey()) = HashPair(hashable, value.get)
-        case _ => return Some(MError(s"unusable as a hash key: ${key.typeDesc()}"))
-      }
+      Some(MHash(pairs.toMap))
     }
-    Some(MHash(pairs.toMap))
   }
 
   private def evalHashIndexExpression(hash: MHash, index: Option[MObject]): Option[MObject] = {
@@ -277,10 +286,10 @@ object Evaluator {
   }
 
   extension (e: Option[MObject]) {
-    def ifNotError(body: MObject => Option[MObject]): Option[MObject] = {
+    private def ifNotError(body: MObject => Option[MObject]): Option[MObject] = {
       e.flatMap {
         case me: MError => e
-        case ne: _ => body(ne)
+        case ne => body(ne)
       }
     }
   }

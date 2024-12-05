@@ -792,7 +792,7 @@ object CompilerTests extends TestSuite {
         case l: List[?] =>
           actual(i) match {
             case cf: MCompiledFunction => testInstructions(l.asInstanceOf[List[Instructions]], cf.instructions)
-            case act: _ => fail(s"constant $act - not a function, got = ${act.typeDesc()}")
+            case act => fail(s"constant $act - not a function, got = ${act.typeDesc()}")
           }
       }
     }
