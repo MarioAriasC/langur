@@ -4,13 +4,11 @@ import org.marioarias.langur.*
 import org.marioarias.langur.utils.Utils.also
 import utest.{ArrowAssert, TestSuite, Tests, test}
 
-/**
- * Created by IntelliJ IDEA.
- *
- * @author Mario Arias
- *         Date: 24/2/22
- *         Time: 8:30 AM
- */
+/** Created by IntelliJ IDEA.
+  *
+  * @author
+  *   Mario Arias Date: 24/2/22 Time: 8:30 AM
+  */
 object CodeTests extends TestSuite {
   override def tests: Tests = Tests {
     test("make") {
@@ -19,7 +17,7 @@ object CodeTests extends TestSuite {
         (OpAdd, Array.emptyIntArray, Array(OpAdd)),
         (OpGetLocal, Array(255), Array(OpGetLocal, 255.u))
       ).foreach { case (op, operands, expected) =>
-        val instructions = make(op, operands *)
+        val instructions = make(op, operands*)
         expected.length ==> instructions.length
         expected.zipWithIndex.foreach { case (byte, i) =>
           byte ==> instructions(i)
@@ -52,7 +50,7 @@ object CodeTests extends TestSuite {
         (OpGetLocal, Array(255), 1),
         (OpClosure, Array(65535, 255), 3)
       ).foreach { case (op, operands, bytesRead) =>
-        val instructions = make(op, operands *)
+        val instructions = make(op, operands*)
         try {
           val definition = lookup(op)
           readOperands(definition, instructions.offset(1)) match {
@@ -71,7 +69,10 @@ object CodeTests extends TestSuite {
 
   extension (ins: Instructions) {
     def inspect: String = {
-      def fmtInstruction(definition: Definition, operands: Array[Int]): String = {
+      def fmtInstruction(
+          definition: Definition,
+          operands: Array[Int]
+      ): String = {
         val operandCount = definition.operandsWidths.length
         if (operands.length != operandCount) {
           return s"ERROR: operand len ${operands.length} does not match defined $operandCount\n"
@@ -91,7 +92,9 @@ object CodeTests extends TestSuite {
           val definition = lookup(ins(i))
           readOperands(definition, ins.offset(i + 1)) match {
             case (operands, read) =>
-              builder.append("%04d %s\n".format(i, fmtInstruction(definition, operands)))
+              builder.append(
+                "%04d %s\n".format(i, fmtInstruction(definition, operands))
+              )
               i += 1 + read
           }
         } catch {
@@ -103,7 +106,10 @@ object CodeTests extends TestSuite {
     }
   }
 
-  def readOperands(definition: Definition, ins: Instructions): (Array[Int], Int) = {
+  def readOperands(
+      definition: Definition,
+      ins: Instructions
+  ): (Array[Int], Int) = {
     var offset = 0
     val operands = definition.operandsWidths.map { width =>
       (width match {

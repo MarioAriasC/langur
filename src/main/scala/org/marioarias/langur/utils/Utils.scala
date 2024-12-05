@@ -7,7 +7,7 @@ package org.marioarias.langur.utils
   */
 object Utils {
 
-  extension[T](t: T) {
+  extension [T](t: T) {
     def also(body: T => Unit): T = {
       body(t)
       t

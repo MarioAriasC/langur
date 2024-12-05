@@ -124,15 +124,15 @@ class Lexer(input: String) {
     }
   }
 
-  extension(ch: Char) {
+  extension (ch: Char) {
     def isIdentifier: Boolean = ch.isLetter || ch == '_'
   }
 
-  extension(tokenType: TokenType) {
+  extension (tokenType: TokenType) {
     def token(): Token = Token(tokenType, ch.toString)
   }
 
-  extension(value: String) {
+  extension (value: String) {
     def lookupIdent(): TokenType = {
       TokenType.keywords.get(value) match {
         case Some(tokenType) => tokenType

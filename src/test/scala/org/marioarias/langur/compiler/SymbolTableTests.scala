@@ -3,13 +3,11 @@ package org.marioarias.langur.compiler
 import org.marioarias.langur.fail
 import utest.{ArrowAssert, TestSuite, Tests, test}
 
-/**
- * Created by IntelliJ IDEA.
- *
- * @author Mario Arias
- *         Date: 1/3/22
- *         Time: 2:46 PM
- */
+/** Created by IntelliJ IDEA.
+  *
+  * @author
+  *   Mario Arias Date: 1/3/22 Time: 2:46 PM
+  */
 object SymbolTableTests extends TestSuite {
   override def tests: Tests = Tests {
     test("define") {
@@ -19,7 +17,7 @@ object SymbolTableTests extends TestSuite {
         "c" -> Symbol("c", SymbolScope.LOCAL, 0),
         "d" -> Symbol("d", SymbolScope.LOCAL, 1),
         "e" -> Symbol("e", SymbolScope.LOCAL, 0),
-        "f" -> Symbol("f", SymbolScope.LOCAL, 1),
+        "f" -> Symbol("f", SymbolScope.LOCAL, 1)
       )
 
       def testSymbol(name: String, table: SymbolTable): Unit = {
@@ -74,7 +72,7 @@ object SymbolTableTests extends TestSuite {
         Symbol("a", SymbolScope.GLOBAL, 0),
         Symbol("b", SymbolScope.GLOBAL, 1),
         Symbol("c", SymbolScope.LOCAL, 0),
-        Symbol("d", SymbolScope.LOCAL, 1),
+        Symbol("d", SymbolScope.LOCAL, 1)
       ).foreach { sym =>
         testSymbol(local, sym)
       }
@@ -97,13 +95,13 @@ object SymbolTableTests extends TestSuite {
           Symbol("a", SymbolScope.GLOBAL, 0),
           Symbol("b", SymbolScope.GLOBAL, 1),
           Symbol("c", SymbolScope.LOCAL, 0),
-          Symbol("d", SymbolScope.LOCAL, 1),
+          Symbol("d", SymbolScope.LOCAL, 1)
         ),
         secondLocal -> List(
           Symbol("a", SymbolScope.GLOBAL, 0),
           Symbol("b", SymbolScope.GLOBAL, 1),
           Symbol("e", SymbolScope.LOCAL, 0),
-          Symbol("f", SymbolScope.LOCAL, 1),
+          Symbol("f", SymbolScope.LOCAL, 1)
         )
       ).foreach { case (table, symbols) =>
         symbols.foreach { symbol =>
@@ -120,7 +118,7 @@ object SymbolTableTests extends TestSuite {
         Symbol("a", SymbolScope.BUILTIN, 0),
         Symbol("c", SymbolScope.BUILTIN, 1),
         Symbol("e", SymbolScope.BUILTIN, 2),
-        Symbol("f", SymbolScope.BUILTIN, 3),
+        Symbol("f", SymbolScope.BUILTIN, 3)
       )
 
       expected.zipWithIndex.foreach { (symbol, i) =>
@@ -133,7 +131,8 @@ object SymbolTableTests extends TestSuite {
             val result = table.resolve(symbol.name)
             symbol ==> result
           } catch {
-            case e: SymbolException => fail("name ${symbol.name} not resolvable")
+            case e: SymbolException =>
+              fail("name ${symbol.name} not resolvable")
           }
         }
       }
@@ -158,7 +157,7 @@ object SymbolTableTests extends TestSuite {
             Symbol("a", SymbolScope.GLOBAL, 0),
             Symbol("b", SymbolScope.GLOBAL, 1),
             Symbol("c", SymbolScope.LOCAL, 0),
-            Symbol("d", SymbolScope.LOCAL, 1),
+            Symbol("d", SymbolScope.LOCAL, 1)
           ),
           List.empty
         ),
@@ -170,26 +169,25 @@ object SymbolTableTests extends TestSuite {
             Symbol("c", SymbolScope.FREE, 0),
             Symbol("d", SymbolScope.FREE, 1),
             Symbol("e", SymbolScope.LOCAL, 0),
-            Symbol("f", SymbolScope.LOCAL, 1),
+            Symbol("f", SymbolScope.LOCAL, 1)
           ),
           List(
             Symbol("c", SymbolScope.LOCAL, 0),
-            Symbol("d", SymbolScope.LOCAL, 1),
+            Symbol("d", SymbolScope.LOCAL, 1)
           )
         )
-      ).foreach {
-        case (table, expectedSymbols, expectedFreeSymbols) =>
-          expectedSymbols.foreach { sym =>
-            testSymbol(table, sym)
-          }
+      ).foreach { case (table, expectedSymbols, expectedFreeSymbols) =>
+        expectedSymbols.foreach { sym =>
+          testSymbol(table, sym)
+        }
 
-          table.freeSymbols.size ==> expectedFreeSymbols.length
+        table.freeSymbols.size ==> expectedFreeSymbols.length
 
-          expectedFreeSymbols.zipWithIndex.foreach { (sym, i) =>
+        expectedFreeSymbols.zipWithIndex.foreach { (sym, i) =>
 
-            val result = table.freeSymbols(i)
-            sym ==> result
-          }
+          val result = table.freeSymbols(i)
+          sym ==> result
+        }
       }
     }
     test("resolve unresolvable free") {
@@ -207,7 +205,7 @@ object SymbolTableTests extends TestSuite {
         Symbol("a", SymbolScope.GLOBAL, 0),
         Symbol("c", SymbolScope.FREE, 0),
         Symbol("e", SymbolScope.LOCAL, 0),
-        Symbol("f", SymbolScope.LOCAL, 1),
+        Symbol("f", SymbolScope.LOCAL, 1)
       ).foreach { expected =>
         testSymbol(secondLocal, expected)
       }

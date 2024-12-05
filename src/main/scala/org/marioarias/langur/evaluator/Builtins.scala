@@ -1,14 +1,16 @@
 package org.marioarias.langur.evaluator
 
-import org.marioarias.langur.objects.{MBuiltinFunction, getBuiltinByName, builtins as fns}
+import org.marioarias.langur.objects.{
+  MBuiltinFunction,
+  getBuiltinByName,
+  builtins as fns
+}
 
-/**
- * Created by IntelliJ IDEA.
- *
- * @author Mario Arias
- *         Date: 22/2/22
- *         Time: 8:48 AM
- */
+/** Created by IntelliJ IDEA.
+  *
+  * @author
+  *   Mario Arias Date: 22/2/22 Time: 8:48 AM
+  */
 object Builtins {
   val builtins = Map(
     "len" -> fns.getBuiltinByName("len"),

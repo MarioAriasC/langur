@@ -8,14 +8,15 @@ import org.marioarias.langur.vm.VM.*
 
 import scala.collection.mutable
 
-/**
- * Created by IntelliJ IDEA.
- *
- * @author Mario Arias
- *         Date: 2/3/22
- *         Time: 8:21 AM
- */
-class VM(bytecode: Bytecode, private val globals: mutable.ListBuffer[MObject] = mutable.ListBuffer.empty) {
+/** Created by IntelliJ IDEA.
+  *
+  * @author
+  *   Mario Arias Date: 2/3/22 Time: 8:21 AM
+  */
+class VM(
+    bytecode: Bytecode,
+    private val globals: mutable.ListBuffer[MObject] = mutable.ListBuffer.empty
+) {
   private val constants = bytecode.constants
   private val stack = Array.fill[Option[MObject]](STACK_SIZE) {
     None
@@ -43,23 +44,23 @@ class VM(bytecode: Bytecode, private val globals: mutable.ListBuffer[MObject] = 
           val constIndex = ins.readInt(ip + 1)
           currentFrame.ip += 2
           push(constants(constIndex))
-        case OpPop => pop()
-        case OpAdd => executeBinaryOperation(op)
-        case OpSub => executeBinaryOperation(op)
-        case OpMul => executeBinaryOperation(op)
-        case OpDiv => executeBinaryOperation(op)
-        case OpMinus => executeMinusOperator()
-        case OpTrue => push(True)
-        case OpFalse => push(False)
+        case OpPop         => pop()
+        case OpAdd         => executeBinaryOperation(op)
+        case OpSub         => executeBinaryOperation(op)
+        case OpMul         => executeBinaryOperation(op)
+        case OpDiv         => executeBinaryOperation(op)
+        case OpMinus       => executeMinusOperator()
+        case OpTrue        => push(True)
+        case OpFalse       => push(False)
         case OpGreaterThan => executeComparison(op)
-        case OpEqual => executeComparison(op)
-        case OpNotEqual => executeComparison(op)
+        case OpEqual       => executeComparison(op)
+        case OpNotEqual    => executeComparison(op)
         case OpBang =>
           pop() match {
-            case Some(True) => push(False)
+            case Some(True)  => push(False)
             case Some(False) => push(True)
-            case Some(Null) => push(True)
-            case _ => push(False)
+            case Some(Null)  => push(True)
+            case _           => push(False)
           }
         case OpJumpNotTruthy =>
           val pos = ins.readInt(ip + 1)
@@ -81,7 +82,7 @@ class VM(bytecode: Bytecode, private val globals: mutable.ListBuffer[MObject] = 
           currentFrame.ip += 2
           push(globals(globalIndex))
         case OpArray => buildAndPush(ins, ip, buildArray)
-        case OpHash => buildAndPush(ins, ip, buildHash)
+        case OpHash  => buildAndPush(ins, ip, buildHash)
         case OpIndex =>
           val index = pop()
           val left = pop()
@@ -131,7 +132,11 @@ class VM(bytecode: Bytecode, private val globals: mutable.ListBuffer[MObject] = 
     }
   }
 
-  private def buildAndPush(ins: Instructions, ip: Int, build: (Int, Int) => MObject): Unit = {
+  private def buildAndPush(
+      ins: Instructions,
+      ip: Int,
+      build: (Int, Int) => MObject
+  ): Unit = {
     val numElements = ins.readInt(ip + 1)
     currentFrame.ip += 2
     val col = build(sp - numElements, sp)
@@ -148,7 +153,8 @@ class VM(bytecode: Bytecode, private val globals: mutable.ListBuffer[MObject] = 
         val pair = HashPair(key.get, value.get)
         key match {
           case Some(h: MHashable[?]) => hashedPairs(h.hashKey()) = pair
-          case _ => throw VMException(s"unusable as hash key: ${key.typeDesc()}")
+          case _ =>
+            throw VMException(s"unusable as hash key: ${key.typeDesc()}")
         }
       }
     }
@@ -169,7 +175,7 @@ class VM(bytecode: Bytecode, private val globals: mutable.ListBuffer[MObject] = 
 
   private def executeCall(numArgs: Int): Unit = {
     stack(sp - 1 - numArgs) match {
-      case Some(c: MClosure) => callClosure(c, numArgs)
+      case Some(c: MClosure)         => callClosure(c, numArgs)
       case Some(b: MBuiltinFunction) => callBuiltin(b, numArgs)
       case _ => throw VMException("calling non-function or non-builtin-in")
     }
@@ -181,13 +187,15 @@ class VM(bytecode: Bytecode, private val globals: mutable.ListBuffer[MObject] = 
     sp = sp - numArgs - 1
     result match {
       case Some(r: MObject) => push(r)
-      case None => push(Null)
+      case None             => push(Null)
     }
   }
 
   private def callClosure(cl: MClosure, numArgs: Int): Unit = {
     if (cl.fn.numParameters != numArgs) {
-      throw VMException(s"wrong number of arguments: want=${cl.fn.numParameters}, got=$numArgs")
+      throw VMException(
+        s"wrong number of arguments: want=${cl.fn.numParameters}, got=$numArgs"
+      )
     }
     val frame = Frame(cl, sp - numArgs)
     pushFrame(frame)
@@ -197,8 +205,9 @@ class VM(bytecode: Bytecode, private val globals: mutable.ListBuffer[MObject] = 
   private def executeIndexExpression(left: MObject, index: MObject): Unit = {
     (left, index) match {
       case (a: MArray, i: MInteger) => executeArrayIndex(a, i)
-      case (h: MHash, _) => executeHashIndex(h, index)
-      case _ => throw VMException(s"index operator not supported ${left.typeDesc()}")
+      case (h: MHash, _)            => executeHashIndex(h, index)
+      case _ =>
+        throw VMException(s"index operator not supported ${left.typeDesc()}")
     }
   }
 
@@ -217,7 +226,7 @@ class VM(bytecode: Bytecode, private val globals: mutable.ListBuffer[MObject] = 
       case h: MHashable[?] =>
         hash.pairs.get(h.hashKey()) match {
           case Some(pair) => push(pair.value)
-          case None => push(Null)
+          case None       => push(Null)
         }
       case _ => throw VMException(s"unusable as hash key: ${index.typeDesc()}")
     }
@@ -227,7 +236,10 @@ class VM(bytecode: Bytecode, private val globals: mutable.ListBuffer[MObject] = 
     val operand = pop()
     operand match {
       case Some(i: MInteger) => push(-i)
-      case _ => throw VMException(s"unsupported type for negation: ${operand.typeDesc()}")
+      case _ =>
+        throw VMException(
+          s"unsupported type for negation: ${operand.typeDesc()}"
+        )
     }
   }
 
@@ -235,21 +247,31 @@ class VM(bytecode: Bytecode, private val globals: mutable.ListBuffer[MObject] = 
     val right = pop()
     val left = pop()
     (left, op, right) match {
-      case (Some(l: MInteger), _, Some(r: MInteger)) => executeBinaryIntegerComparison(op, l, r)
-      case (Some(l: MObject), OpEqual, Some(r: MObject)) => push((l == r).toMBoolean)
-      case (Some(l: MObject), OpNotEqual, Some(r: MObject)) => push((l != r).toMBoolean)
-      case (_, _, _) => throw VMException(s"unknown operator $op (${left.typeDesc()} ${right.typeDesc()})")
+      case (Some(l: MInteger), _, Some(r: MInteger)) =>
+        executeBinaryIntegerComparison(op, l, r)
+      case (Some(l: MObject), OpEqual, Some(r: MObject)) =>
+        push((l == r).toMBoolean)
+      case (Some(l: MObject), OpNotEqual, Some(r: MObject)) =>
+        push((l != r).toMBoolean)
+      case (_, _, _) =>
+        throw VMException(
+          s"unknown operator $op (${left.typeDesc()} ${right.typeDesc()})"
+        )
     }
   }
 
-  private def executeBinaryIntegerComparison(op: Opcode, left: MInteger, right: MInteger): Unit = {
+  private def executeBinaryIntegerComparison(
+      op: Opcode,
+      left: MInteger,
+      right: MInteger
+  ): Unit = {
     val l = left.value
     val r = right.value
     op match {
-      case OpEqual => push((l == r).toMBoolean)
-      case OpNotEqual => push((l != r).toMBoolean)
+      case OpEqual       => push((l == r).toMBoolean)
+      case OpNotEqual    => push((l != r).toMBoolean)
       case OpGreaterThan => push((l > r).toMBoolean)
-      case _ => throw VMException(s"unknown operator $op")
+      case _             => throw VMException(s"unknown operator $op")
     }
   }
 
@@ -257,26 +279,39 @@ class VM(bytecode: Bytecode, private val globals: mutable.ListBuffer[MObject] = 
     val right = pop()
     val left = pop()
     (left, right) match {
-      case (Some(l: MInteger), Some(r: MInteger)) => executeBinaryIntegerOperation(op, l, r)
-      case (Some(l: MString), Some(r: MString)) => executeBinaryStringOperation(op, l, r)
-      case (_, _) => throw VMException(s"unsupported types for binary operation ${left.typeDesc()} ${right.typeDesc()}")
+      case (Some(l: MInteger), Some(r: MInteger)) =>
+        executeBinaryIntegerOperation(op, l, r)
+      case (Some(l: MString), Some(r: MString)) =>
+        executeBinaryStringOperation(op, l, r)
+      case (_, _) =>
+        throw VMException(
+          s"unsupported types for binary operation ${left.typeDesc()} ${right.typeDesc()}"
+        )
     }
   }
 
-  private def executeBinaryStringOperation(opcode: Opcode, left: MString, right: MString): Unit = {
+  private def executeBinaryStringOperation(
+      opcode: Opcode,
+      left: MString,
+      right: MString
+  ): Unit = {
     opcode match {
       case OpAdd => push(MString(left.value + right.value))
-      case _ => throw VMException(s"unknown string operator $opcode")
+      case _     => throw VMException(s"unknown string operator $opcode")
     }
   }
 
-  private def executeBinaryIntegerOperation(opcode: Opcode, left: MInteger, right: MInteger): Unit = {
+  private def executeBinaryIntegerOperation(
+      opcode: Opcode,
+      left: MInteger,
+      right: MInteger
+  ): Unit = {
     val result = opcode match {
       case OpAdd => left + right
       case OpSub => left - right
       case OpMul => left * right
       case OpDiv => left / right
-      case _ => throw VMException("unknown integer operator $op")
+      case _     => throw VMException("unknown integer operator $op")
     }
     push(result)
   }
@@ -305,11 +340,13 @@ class VM(bytecode: Bytecode, private val globals: mutable.ListBuffer[MObject] = 
     constants(index) match {
       case cf: MCompiledFunction =>
         var i = 0
-        val free = Array.fill[MObject](numFree) {
-          val maybe = stack(sp - numFree - i)
-          i += 1
-          maybe.get
-        }.toList
+        val free = Array
+          .fill[MObject](numFree) {
+            val maybe = stack(sp - numFree - i)
+            i += 1
+            maybe.get
+          }
+          .toList
         sp -= numFree
         push(MClosure(cf, free))
       case c => throw VMException(s"not a function $c")
@@ -339,9 +376,9 @@ class VM(bytecode: Bytecode, private val globals: mutable.ListBuffer[MObject] = 
   extension (o: Option[MObject]) {
     def isTruthy: Boolean = {
       o match {
-        case Some(b: MBoolean) => b.value
+        case Some(b: MBoolean)   => b.value
         case Some(_: MNull.type) => false
-        case _ => true
+        case _                   => true
       }
     }
   }

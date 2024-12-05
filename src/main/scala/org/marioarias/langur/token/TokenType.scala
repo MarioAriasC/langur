@@ -1,12 +1,10 @@
 package org.marioarias.langur.token
 
-/**
- * Created by IntelliJ IDEA.
- *
- * @author Mario Arias
- *         Date: 31/1/22
- *         Time: 8:21 PM
- */
+/** Created by IntelliJ IDEA.
+  *
+  * @author
+  *   Mario Arias Date: 31/1/22 Time: 8:21 PM
+  */
 enum TokenType(val value: String) {
   case ILLEGAL extends TokenType("ILLEGAL")
   case EOF extends TokenType("EOF")

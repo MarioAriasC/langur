@@ -7,13 +7,11 @@ import scala.collection.mutable
 import scala.util.boundary
 import scala.util.boundary.break
 
-/**
- * Created by IntelliJ IDEA.
- *
- * @author Mario Arias
- *         Date: 19/2/22
- *         Time: 5:19 PM
- */
+/** Created by IntelliJ IDEA.
+  *
+  * @author
+  *   Mario Arias Date: 19/2/22 Time: 5:19 PM
+  */
 object Evaluator {
   val NULL: MNull.type = MNull
   val TRUE: MBoolean = MBoolean(true)
@@ -25,22 +23,28 @@ object Evaluator {
 
   def eval(node: Option[Node], env: Environment): Option[MObject] = {
     node.flatMap {
-      case p: Program => evalProgram(p.statements, env)
+      case p: Program             => evalProgram(p.statements, env)
       case e: ExpressionStatement => eval(e.expression, env)
-      case i: IntegerLiteral => Some(MInteger(i.value))
-      case p: PrefixExpression => eval(p.right, env).ifNotError { right =>
-        Some(evalPrefixExpression(p.operator, right))
-      }
-      case i: InfixExpression => eval(i.left, env).ifNotError { left =>
-        eval(i.right, env).ifNotError { right =>
-          Some(evalInfixExpression(i.operator, left, right))
+      case i: IntegerLiteral      => Some(MInteger(i.value))
+      case p: PrefixExpression =>
+        eval(p.right, env).ifNotError { right =>
+          Some(evalPrefixExpression(p.operator, right))
         }
-      }
+      case i: InfixExpression =>
+        eval(i.left, env).ifNotError { left =>
+          eval(i.right, env).ifNotError { right =>
+            Some(evalInfixExpression(i.operator, left, right))
+          }
+        }
       case b: BooleanLiteral => Some(b.value.toMonkey)
-      case i: IfExpression => evalIfExpression(i, env)
+      case i: IfExpression   => evalIfExpression(i, env)
       case b: BlockStatement => evalBlockStatement(b, env)
-      case r: ReturnStatement => eval(r.returnValue, env).ifNotError(value => Some(MReturnValue(value)))
-      case l: LetStatement => eval(l.value, env).ifNotError(value => Some(env.put(l.name.value, value)))
+      case r: ReturnStatement =>
+        eval(r.returnValue, env).ifNotError(value => Some(MReturnValue(value)))
+      case l: LetStatement =>
+        eval(l.value, env).ifNotError(value =>
+          Some(env.put(l.name.value, value))
+        )
       case f: FunctionLiteral => Some(MFunction(f.parameters, f.body, env))
       case c: CallExpression =>
         eval(c.function, env).ifNotError { function =>
@@ -51,10 +55,10 @@ object Evaluator {
             applyFunction(function, args)
           }
         }
-      case i: Identifier => Some(evalIdentifier(i, env))
+      case i: Identifier    => Some(evalIdentifier(i, env))
       case s: StringLiteral => Some(MString(s.value))
       case i: IndexExpression =>
-        boundary{
+        boundary {
           val left = eval(i.left, env)
           if (left.isError) {
             break(left)
@@ -79,7 +83,10 @@ object Evaluator {
     }
   }
 
-  private def evalProgram(statements: List[Statement], env: Environment): Option[MObject] = {
+  private def evalProgram(
+      statements: List[Statement],
+      env: Environment
+  ): Option[MObject] = {
     var result: Option[MObject] = None
     boundary {
       statements.foreach { statement =>
@@ -87,8 +94,8 @@ object Evaluator {
 
         result.foreach {
           case r: MReturnValue => break(Some(r.value))
-          case e: MError => break(Some(e))
-          case _ => //Nothing
+          case e: MError       => break(Some(e))
+          case _               => // Nothing
         }
       }
       result
@@ -96,54 +103,70 @@ object Evaluator {
 
   }
 
-  private def evalPrefixExpression(operator: String, right: MObject): MObject = {
+  private def evalPrefixExpression(
+      operator: String,
+      right: MObject
+  ): MObject = {
     operator match {
       case "!" => evalBangOperatorExpression(right)
       case "-" => evalMinusPrefixOperatorExpression(right)
-      case _ => MError(s"Unknown operator: $operator${right.typeDesc()}")
+      case _   => MError(s"Unknown operator: $operator${right.typeDesc()}")
     }
   }
 
   private def evalMinusPrefixOperatorExpression(right: MObject): MObject = {
     right match {
       case i: MInteger => -i
-      case _ => MError(s"unknown operator: -${right.typeDesc()}")
+      case _           => MError(s"unknown operator: -${right.typeDesc()}")
     }
   }
 
   private def evalBangOperatorExpression(right: MObject): MObject = {
     right match {
-      case TRUE => FALSE
+      case TRUE  => FALSE
       case FALSE => TRUE
-      case NULL => TRUE
-      case _ => FALSE
+      case NULL  => TRUE
+      case _     => FALSE
     }
   }
 
-  private def evalInfixExpression(operator: String, left: MObject, right: MObject): MObject = {
+  private def evalInfixExpression(
+      operator: String,
+      left: MObject,
+      right: MObject
+  ): MObject = {
     (left, operator, right) match {
-      case (left: MInteger, "+", right: MInteger) => left + right
-      case (left: MInteger, "-", right: MInteger) => left - right
-      case (left: MInteger, "*", right: MInteger) => left * right
-      case (left: MInteger, "/", right: MInteger) => left / right
-      case (left: MInteger, "<", right: MInteger) => (left < right).toMonkey
-      case (left: MInteger, ">", right: MInteger) => (left > right).toMonkey
+      case (left: MInteger, "+", right: MInteger)  => left + right
+      case (left: MInteger, "-", right: MInteger)  => left - right
+      case (left: MInteger, "*", right: MInteger)  => left * right
+      case (left: MInteger, "/", right: MInteger)  => left / right
+      case (left: MInteger, "<", right: MInteger)  => (left < right).toMonkey
+      case (left: MInteger, ">", right: MInteger)  => (left > right).toMonkey
       case (left: MInteger, "==", right: MInteger) => (left == right).toMonkey
       case (left: MInteger, "!=", right: MInteger) => (left != right).toMonkey
-      case (_, "==", _) => (left == right).toMonkey
-      case (_, "!=", _) => (left != right).toMonkey
-      case (_, _, _) if left.typeDesc() != right.typeDesc() => MError(s"type mismatch: ${left.typeDesc()} $operator ${right.typeDesc()}")
+      case (_, "==", _)                            => (left == right).toMonkey
+      case (_, "!=", _)                            => (left != right).toMonkey
+      case (_, _, _) if left.typeDesc() != right.typeDesc() =>
+        MError(
+          s"type mismatch: ${left.typeDesc()} $operator ${right.typeDesc()}"
+        )
       case (left: MString, "+", right: MString) => left + right
-      case (_, _, _) => MError(s"unknown operator: ${left.typeDesc()} $operator ${right.typeDesc()}")
+      case (_, _, _) =>
+        MError(
+          s"unknown operator: ${left.typeDesc()} $operator ${right.typeDesc()}"
+        )
     }
   }
 
-  private def evalIfExpression(expression: IfExpression, env: Environment): Option[MObject] = {
+  private def evalIfExpression(
+      expression: IfExpression,
+      env: Environment
+  ): Option[MObject] = {
     def isTruthy(obj: MObject): Boolean = obj match {
-      case NULL => false
-      case TRUE => true
+      case NULL  => false
+      case TRUE  => true
       case FALSE => false
-      case _ => true
+      case _     => true
     }
 
     eval(expression.condition, env).ifNotError { condition =>
@@ -157,7 +180,10 @@ object Evaluator {
     }
   }
 
-  private def evalBlockStatement(block: BlockStatement, env: Environment): Option[MObject] = boundary {
+  private def evalBlockStatement(
+      block: BlockStatement,
+      env: Environment
+  ): Option[MObject] = boundary {
     var result: Option[MObject] = None
     for statements <- block.statements yield {
       statements.foreach { statement =>
@@ -175,22 +201,30 @@ object Evaluator {
   extension (o: Option[MObject]) {
     private def isError: Boolean = o match {
       case Some(e: MError) => true
-      case Some(_) => false
-      case None => false
+      case Some(_)         => false
+      case None            => false
     }
   }
 
-  private def evalExpressions(arguments: Option[List[Option[Expression]]], env: Environment): List[Option[MObject]] = boundary {
-    arguments.map(_.map { argument =>
-      val evaluated = eval(argument, env)
-      if (evaluated.isError) {
-        break(List(evaluated))
-      }
-      evaluated
-    }).getOrElse(List.empty)
+  private def evalExpressions(
+      arguments: Option[List[Option[Expression]]],
+      env: Environment
+  ): List[Option[MObject]] = boundary {
+    arguments
+      .map(_.map { argument =>
+        val evaluated = eval(argument, env)
+        if (evaluated.isError) {
+          break(List(evaluated))
+        }
+        evaluated
+      })
+      .getOrElse(List.empty)
   }
 
-  private def applyFunction(function: MObject, args: List[Option[MObject]]): Option[MObject] = {
+  private def applyFunction(
+      function: MObject,
+      args: List[Option[MObject]]
+  ): Option[MObject] = {
     function match {
       case f: MFunction =>
         val extendEnv = extendFunctionEnv(f, args)
@@ -201,14 +235,19 @@ object Evaluator {
     }
   }
 
-  private def unwrapReturnValue(maybeObject: Option[MObject]): Option[MObject] = {
+  private def unwrapReturnValue(
+      maybeObject: Option[MObject]
+  ): Option[MObject] = {
     maybeObject match {
       case Some(r: MReturnValue) => Some(r.value)
-      case _ => maybeObject
+      case _                     => maybeObject
     }
   }
 
-  private def extendFunctionEnv(function: MFunction, args: List[Option[MObject]]): Environment = {
+  private def extendFunctionEnv(
+      function: MFunction,
+      args: List[Option[MObject]]
+  ): Environment = {
     val env = Environment.newEnclosedEnvironment(function.env)
     function.parameters.foreach { parameters =>
       parameters.zipWithIndex.foreach { case (identifier, i) =>
@@ -230,15 +269,23 @@ object Evaluator {
     }
   }
 
-  private def evalIndexExpression(left: Option[MObject], index: Option[MObject]): Option[MObject] = {
+  private def evalIndexExpression(
+      left: Option[MObject],
+      index: Option[MObject]
+  ): Option[MObject] = {
     (left, index) match {
-      case (Some(array: MArray), Some(i: MInteger)) => evalArrayIndexExpression(array, i)
+      case (Some(array: MArray), Some(i: MInteger)) =>
+        evalArrayIndexExpression(array, i)
       case (Some(hash: MHash), _) => evalHashIndexExpression(hash, index)
-      case (_, _) => Some(MError(s"index operator not supported: ${left.typeDesc()}"))
+      case (_, _) =>
+        Some(MError(s"index operator not supported: ${left.typeDesc()}"))
     }
   }
 
-  private def evalArrayIndexExpression(array: MArray, index: MInteger): Option[MObject] = {
+  private def evalArrayIndexExpression(
+      array: MArray,
+      index: MInteger
+  ): Option[MObject] = {
     val elements = array.elements
     val i = index.value
     val max = elements.size - 1
@@ -250,7 +297,10 @@ object Evaluator {
     elements(i.toInt)
   }
 
-  private def evalHashLiteral(hash: HashLiteral, env: Environment): Option[MObject] = {
+  private def evalHashLiteral(
+      hash: HashLiteral,
+      env: Environment
+  ): Option[MObject] = {
     val pairs = mutable.HashMap.empty[HashKey, HashPair]
     boundary {
       hash.pairs.foreach { (keyNode, valueNode) =>
@@ -265,20 +315,24 @@ object Evaluator {
               break(value)
             }
             pairs(hashable.hashKey()) = HashPair(hashable, value.get)
-          case _ => break(Some(MError(s"unusable as a hash key: ${key.typeDesc()}")))
+          case _ =>
+            break(Some(MError(s"unusable as a hash key: ${key.typeDesc()}")))
         }
       }
       Some(MHash(pairs.toMap))
     }
   }
 
-  private def evalHashIndexExpression(hash: MHash, index: Option[MObject]): Option[MObject] = {
+  private def evalHashIndexExpression(
+      hash: MHash,
+      index: Option[MObject]
+  ): Option[MObject] = {
     index match {
       case Some(h: MHashable[?]) =>
         val pair = hash.pairs.get(h.hashKey())
         pair match {
           case Some(value: HashPair) => Some(value.value)
-          case None => Some(NULL)
+          case None                  => Some(NULL)
         }
       case _ =>
         Some(MError(s"unusable as a hash key: ${index.typeDesc()}"))
@@ -286,10 +340,12 @@ object Evaluator {
   }
 
   extension (e: Option[MObject]) {
-    private def ifNotError(body: MObject => Option[MObject]): Option[MObject] = {
+    private def ifNotError(
+        body: MObject => Option[MObject]
+    ): Option[MObject] = {
       e.flatMap {
         case me: MError => e
-        case ne => body(ne)
+        case ne         => body(ne)
       }
     }
   }

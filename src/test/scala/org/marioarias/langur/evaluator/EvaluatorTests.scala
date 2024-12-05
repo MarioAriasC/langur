@@ -8,13 +8,11 @@ import utest.{ArrowAssert, TestSuite, Tests, test}
 
 import scala.reflect.{ClassTag, classTag}
 
-/**
- * Created by IntelliJ IDEA.
- *
- * @author Mario Arias
- *         Date: 19/2/22
- *         Time: 3:31 PM
- */
+/** Created by IntelliJ IDEA.
+  *
+  * @author
+  *   Mario Arias Date: 19/2/22 Time: 3:31 PM
+  */
 object EvaluatorTests extends TestSuite {
 
   extension (l: List[(String, Int)]) {
@@ -103,13 +101,14 @@ object EvaluatorTests extends TestSuite {
         val evaluated = testEval(input)
         expected match {
           case Some(l: Int) => testInteger(evaluated, l.toLong)
-          case None => evaluated ==> Some(Evaluator.NULL)
+          case None         => evaluated ==> Some(Evaluator.NULL)
         }
       }
     }
 
     test("return statement") {
-      List(("return 10;", 10),
+      List(
+        ("return 10;", 10),
         ("return 10; 9;", 10),
         ("return 2 * 5; 9;", 10),
         ("9; return 2 * 5; 9;", 10),
@@ -122,7 +121,8 @@ object EvaluatorTests extends TestSuite {
 
             return 1;
           }
-          """, 10
+          """,
+          10
         ),
         (
           """
@@ -130,7 +130,8 @@ object EvaluatorTests extends TestSuite {
             return x;
             x + 10;
           };
-          f(10);""", 10
+          f(10);""",
+          10
         ),
         (
           """
@@ -139,39 +140,41 @@ object EvaluatorTests extends TestSuite {
              return result;
              return 10;
           };
-          f(10);""", 20
-        )).eval()
+          f(10);""",
+          20
+        )
+      ).eval()
     }
 
     test("error handling") {
       List(
         (
           "5 + true;",
-          "type mismatch: MInteger + MBoolean",
+          "type mismatch: MInteger + MBoolean"
         ),
         (
           "5 + true; 5;",
-          "type mismatch: MInteger + MBoolean",
+          "type mismatch: MInteger + MBoolean"
         ),
         (
           "-true",
-          "unknown operator: -MBoolean",
+          "unknown operator: -MBoolean"
         ),
         (
           "true + false;",
-          "unknown operator: MBoolean + MBoolean",
+          "unknown operator: MBoolean + MBoolean"
         ),
         (
           "true + false + true + false;",
-          "unknown operator: MBoolean + MBoolean",
+          "unknown operator: MBoolean + MBoolean"
         ),
         (
           "5; true + false; 5",
-          "unknown operator: MBoolean + MBoolean",
+          "unknown operator: MBoolean + MBoolean"
         ),
         (
           "if (10 > 1) { true + false; }",
-          "unknown operator: MBoolean + MBoolean",
+          "unknown operator: MBoolean + MBoolean"
         ),
         (
           """
@@ -183,11 +186,11 @@ object EvaluatorTests extends TestSuite {
             return 1;
           }
           """,
-          "unknown operator: MBoolean + MBoolean",
+          "unknown operator: MBoolean + MBoolean"
         ),
         (
           "foobar",
-          "identifier not found: foobar",
+          "identifier not found: foobar"
         ),
         (
           """"Hello" - "World"""",
@@ -233,7 +236,7 @@ object EvaluatorTests extends TestSuite {
         ("let double = fn(x) { x * 2; }; double(5);", 10),
         ("let add = fn(x, y) { x + y; }; add(5, 5);", 10),
         ("let add = fn(x, y) { x + y; }; add(5 + 5, add(5, 5));", 20),
-        ("fn(x) { x; }(5)", 5),
+        ("fn(x) { x; }(5)", 5)
       ).eval()
     }
 
@@ -269,7 +272,10 @@ object EvaluatorTests extends TestSuite {
         ("""len("four")""", Some(4)),
         ("""len("hello world")""", Some(11)),
         ("len(1)", Some("argument to `len` not supported, got MInteger")),
-        ("""len("one", "two")""", Some("wrong number of arguments. got=2, want=1")),
+        (
+          """len("one", "two")""",
+          Some("wrong number of arguments. got=2, want=1")
+        ),
         ("len([1, 2, 3])", Some(3)),
         ("len([])", Some(0)),
         ("push([], 1)", Some(List(1))),
@@ -281,21 +287,23 @@ object EvaluatorTests extends TestSuite {
         ("last([])", None),
         ("last(1)", Some("argument to `last` must be ARRAY, got MInteger")),
         ("rest([1, 2, 3])", Some(List(2, 3))),
-        ("rest([])", None),
+        ("rest([])", None)
       ).foreach { case (input, expected) =>
         val evaluated = testEval(input)
         expected match {
-          case None => evaluated ==> Some(Evaluator.NULL)
+          case None         => evaluated ==> Some(Evaluator.NULL)
           case Some(i: Int) => testInteger(evaluated, i.toLong)
-          case Some(s: String) => checkType(evaluated) { (error: MError) =>
-            Some(error.message) ==> expected
-          }
-          case Some(l: List[Int]) => checkType(evaluated) { (array: MArray) =>
-            l.size ==> array.elements.size
-            l.zipWithIndex.foreach { case (element, i) =>
-              testInteger(array.elements(i), element.toLong)
+          case Some(s: String) =>
+            checkType(evaluated) { (error: MError) =>
+              Some(error.message) ==> expected
             }
-          }
+          case Some(l: List[Int]) =>
+            checkType(evaluated) { (array: MArray) =>
+              l.size ==> array.elements.size
+              l.zipWithIndex.foreach { case (element, i) =>
+                testInteger(array.elements(i), element.toLong)
+              }
+            }
         }
       }
     }
@@ -311,24 +319,23 @@ object EvaluatorTests extends TestSuite {
   private def testString(obj: Option[MObject], expected: String): Unit = {
     obj match {
       case Some(o: MString) => o.value ==> expected
-      case _ => fail(s"obj is not MString. got=$obj")
+      case _                => fail(s"obj is not MString. got=$obj")
     }
   }
 
   private def testInteger(obj: Option[MObject], expected: Long): Unit = {
     obj match {
       case Some(o: MInteger) => o.value ==> expected
-      case _ => fail(s"obj is not MInteger. got=$obj")
+      case _                 => fail(s"obj is not MInteger. got=$obj")
     }
   }
 
   private def testBoolean(obj: Option[MObject], expected: Boolean): Unit = {
     obj match {
       case Some(o: MBoolean) => o.value ==> expected
-      case _ => fail(s"obj is not MBoolean. got=$obj")
+      case _                 => fail(s"obj is not MBoolean. got=$obj")
     }
   }
-
 
   private def testEval(input: String): Option[MObject] = {
     //    println(input)
