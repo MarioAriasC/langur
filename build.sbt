@@ -1,6 +1,8 @@
-val scala3Version = "3.5.2"
+val scala3Version = "3.3.3"
 
 enablePlugins(JavaAppPackaging)
+
+enablePlugins(ScalaNativePlugin)
 
 lazy val root = project
   .in(file("."))
@@ -13,3 +15,11 @@ lazy val root = project
 
     testFrameworks += new TestFramework("utest.runner.Framework")
   )
+
+import scala.scalanative.build._
+
+nativeConfig ~= { c =>
+    c.withLTO(LTO.none)
+      .withMode(Mode.debug)
+      .withGC(GC.immix)
+}
