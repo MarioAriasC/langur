@@ -163,9 +163,7 @@ object Evaluator {
       env: Environment
   ): Option[MObject] = {
     def isTruthy(obj: MObject): Boolean = obj match {
-      case NULL  => false
-      case TRUE  => true
-      case FALSE => false
+      case NULL | FALSE => false
       case _     => true
     }
 
@@ -201,8 +199,7 @@ object Evaluator {
   extension (o: Option[MObject]) {
     private def isError: Boolean = o match {
       case Some(e: MError) => true
-      case Some(_)         => false
-      case None            => false
+      case _         => false
     }
   }
 
