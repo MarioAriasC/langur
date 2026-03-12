@@ -4,8 +4,8 @@ import org.marioarias.langur.ast.*
 import org.marioarias.langur.objects.*
 
 import scala.collection.mutable
-import scala.util.boundary
-import scala.util.boundary.break
+
+import scala.scalanative.runtime.Continuations.*
 
 /** Created by IntelliJ IDEA.
   *
@@ -93,8 +93,8 @@ object Evaluator {
         result = eval(Some(statement), env)
 
         result.foreach {
-          case r: MReturnValue => break(Some(r.value))
-          case e: MError       => break(Some(e))
+          case r: MReturnValue => break[Option[MObject]](Some(r.value))
+          case e: MError       => break[Option[MObject]](Some(e))
           case _               => // Nothing
         }
       }
@@ -313,7 +313,7 @@ object Evaluator {
             }
             pairs(hashable.hashKey()) = HashPair(hashable, value.get)
           case _ =>
-            break(Some(MError(s"unusable as a hash key: ${key.typeDesc()}")))
+            break[Option[MObject]](Some(MError(s"unusable as a hash key: ${key.typeDesc()}")))
         }
       }
       Some(MHash(pairs.toMap))
