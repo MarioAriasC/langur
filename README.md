@@ -2,6 +2,8 @@
 
 A Scala-Native 3 implementation of the [Monkey Language](https://monkeylang.org/)
 
+The Scala JVM version is on the [main branch](https://github.com/MarioAriasC/langur)
+
 Langur has 3 sibling implementations:
 
 * [Kotlin](https://github.com/MarioAriasC/monkey.kt)
@@ -20,5 +22,8 @@ and [Writing A Compiler in Go](https://compilerbook.com/)) are implemented.
 | [`tests.sh`](tests.sh)           | Run all the tests                                                                                             |
 | [`build.sh`](build.sh)           | Release build                                                                                                 |
 | [`benchmarks.sh`](benchmarks.sh) | Run the classic monkey benchmark (`fibonacci(35)`), requires one command (`eval`,`eval-fast`,`vm`,`vm-fast`)) |
-| [`repl.sh`](repl.sh)             | Run the Langur REPL                                                                                           |
 
+
+## REPL
+
+The REPL for Langur Native is currently  not working, we're working to fix it

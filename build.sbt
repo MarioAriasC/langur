@@ -14,6 +14,8 @@ lazy val root = project
 
 import scala.scalanative.build._
 
+mainClass in (Compile) := Some("org.marioarias.langur.main.benchmark")
+
 nativeConfig ~= { c =>
     c.withLTO(LTO.none)
       .withMode(Mode.debug)

@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-./langur-0.1.0-SNAPSHOT/bin/benchmark "$1"
+./target/scala-3.8.2/native/org.marioarias.langur.main.benchmark "$1"
