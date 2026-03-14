@@ -1,10 +1,11 @@
 package org.marioarias.langur.evaluator
 
+import org.junit.Assert.assertTrue
+import org.junit.Test
 import org.marioarias.langur.*
 import org.marioarias.langur.lexer.Lexer
 import org.marioarias.langur.objects.*
 import org.marioarias.langur.parser.Parser
-import utest.{ArrowAssert, TestSuite, Tests, test}
 
 import scala.reflect.{ClassTag, classTag}
 
@@ -13,7 +14,7 @@ import scala.reflect.{ClassTag, classTag}
   * @author
   *   Mario Arias Date: 19/2/22 Time: 3:31 PM
   */
-object EvaluatorTests extends TestSuite {
+class EvaluatorTests  {
 
   extension (l: List[(String, Int)]) {
     def eval(): Unit = {
@@ -26,8 +27,8 @@ object EvaluatorTests extends TestSuite {
     }
   }
 
-  override def tests: Tests = Tests {
-    test("eval integer expression") {
+  
+    @Test def `eval integer expression`():Unit = {
       List(
         ("5", 5),
         ("10", 10),
@@ -47,7 +48,7 @@ object EvaluatorTests extends TestSuite {
       ).eval()
     }
 
-    test("eval boolean expression") {
+    @Test def `eval boolean expression`():Unit = {
       List(
         ("true", true),
         ("false", false),
@@ -74,7 +75,7 @@ object EvaluatorTests extends TestSuite {
       }
     }
 
-    test("bang operator") {
+    @Test def `bang operator`():Unit = {
       List(
         ("!true", false),
         ("!false", true),
@@ -88,7 +89,7 @@ object EvaluatorTests extends TestSuite {
       }
     }
 
-    test("if else expression") {
+    @Test def `if else expression`():Unit = {
       List(
         ("if (true) { 10 }", Some(10)),
         ("if (false) { 10 }", None),
@@ -101,12 +102,12 @@ object EvaluatorTests extends TestSuite {
         val evaluated = testEval(input)
         expected match {
           case Some(l: Int) => testInteger(evaluated, l.toLong)
-          case None         => evaluated ==> Some(Evaluator.NULL)
+          case None         => assertTrue(evaluated.contains(Evaluator.NULL))
         }
       }
     }
 
-    test("return statement") {
+    @Test def `return statement`():Unit = {
       List(
         ("return 10;", 10),
         ("return 10; 9;", 10),
@@ -146,7 +147,7 @@ object EvaluatorTests extends TestSuite {
       ).eval()
     }
 
-    test("error handling") {
+    @Test def `error handling`():Unit = {
       List(
         (
           "5 + true;",
@@ -203,12 +204,12 @@ object EvaluatorTests extends TestSuite {
       ).foreach { case (input, expected) =>
         val evaluated = testEval(input)
         checkType(evaluated) { (error: MError) =>
-          error.message ==> expected
+          assertTrue(error.message == expected)
         }
       }
     }
 
-    test("let statement") {
+    @Test def `let statement`():Unit = {
       List(
         ("let a = 5; a;", 5),
         ("let a = 5 * 5; a;", 25),
@@ -217,19 +218,19 @@ object EvaluatorTests extends TestSuite {
       ).eval()
     }
 
-    test("function object") {
+    @Test def `function object`():Unit = {
       val input = "fn(x) { x + 2; };"
       val evaluated = testEval(input)
       checkType(evaluated) { (fn: MFunction) =>
         for parameters <- fn.parameters yield {
-          parameters.size ==> 1
-          parameters.head.toString ==> "x"
+          assertTrue(parameters.size == 1)
+          assertTrue(parameters.head.toString == "x")
         }
-        fn.body.map(_.toString).getOrElse("") ==> "(x + 2)"
+        assertTrue(fn.body.map(_.toString).getOrElse("") == "(x + 2)")
       }
     }
 
-    test("function application") {
+    @Test def `function application`():Unit = {
       List(
         ("let identity = fn(x) { x; }; identity(5);", 5),
         ("let identity = fn(x) { return x; }; identity(5);", 5),
@@ -240,7 +241,7 @@ object EvaluatorTests extends TestSuite {
       ).eval()
     }
 
-    test("enclosing environment") {
+    @Test def `enclosing environment`():Unit = {
       val input =
         """let first = 10;
            let second = 10;
@@ -256,17 +257,17 @@ object EvaluatorTests extends TestSuite {
       testInteger(testEval(input), 70L)
     }
 
-    test("string literal") {
+    @Test def `string literal`():Unit = {
       val input = """"Hello World!""""
       testString(testEval(input), "Hello World!")
     }
 
-    test("string concatenation") {
+    @Test def `string concatenation`():Unit = {
       val input = """"Hello" + " " + "World!""""
       testString(testEval(input), "Hello World!")
     }
 
-    test("builtin functions") {
+    @Test def `builtin functions`():Unit = {
       List(
         ("""len("")""", Some(0)),
         ("""len("four")""", Some(4)),
@@ -291,15 +292,15 @@ object EvaluatorTests extends TestSuite {
       ).foreach { case (input, expected) =>
         val evaluated = testEval(input)
         expected match {
-          case None         => evaluated ==> Some(Evaluator.NULL)
+          case None         => assertTrue(evaluated.contains(Evaluator.NULL))
           case Some(i: Int) => testInteger(evaluated, i.toLong)
           case Some(s: String) =>
             checkType(evaluated) { (error: MError) =>
-              Some(error.message) ==> expected
+              assertTrue(expected.contains(error.message))
             }
           case Some(l: List[Int]) =>
             checkType(evaluated) { (array: MArray) =>
-              l.size ==> array.elements.size
+              assertTrue(l.size == array.elements.size)
               l.zipWithIndex.foreach { case (element, i) =>
                 testInteger(array.elements(i), element.toLong)
               }
@@ -307,32 +308,24 @@ object EvaluatorTests extends TestSuite {
         }
       }
     }
-  }
-
-  /*private def testObject[T: ClassTag, M <: MValue[T]](obj: Option[MObject], expected: T): Unit = {
-    obj match {
-      case Some(o: M) => o.value ==> expected
-      case _ => fail(s"obj does not have a ${classTag[T]} value")
-    }
-  }*/
-
+  
   private def testString(obj: Option[MObject], expected: String): Unit = {
     obj match {
-      case Some(o: MString) => o.value ==> expected
+      case Some(o: MString) => assertTrue(o.value == expected)
       case _                => fail(s"obj is not MString. got=$obj")
     }
   }
 
   private def testInteger(obj: Option[MObject], expected: Long): Unit = {
     obj match {
-      case Some(o: MInteger) => o.value ==> expected
+      case Some(o: MInteger) => assertTrue(o.value == expected)
       case _                 => fail(s"obj is not MInteger. got=$obj")
     }
   }
 
   private def testBoolean(obj: Option[MObject], expected: Boolean): Unit = {
     obj match {
-      case Some(o: MBoolean) => o.value ==> expected
+      case Some(o: MBoolean) => assertTrue(o.value == expected)
       case _                 => fail(s"obj is not MBoolean. got=$obj")
     }
   }

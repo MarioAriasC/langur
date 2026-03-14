@@ -1,11 +1,11 @@
 package org.marioarias
 
+import org.junit.Assert.assertTrue
 import org.marioarias.langur.ast.Program
 import org.marioarias.langur.code.*
 import org.marioarias.langur.lexer.Lexer
 import org.marioarias.langur.objects.{MInteger, MObject, MString, typeDesc}
 import org.marioarias.langur.parser.Parser
-import utest.ArrowAssert
 
 import scala.reflect.{ClassTag, classTag}
 
@@ -42,20 +42,20 @@ package object langur {
 //    println("expected" + expected.mkString("Array(", ", ", ")"))
 //    println("actual" + actual.mkString("Array(", ", ", ")"))
     expected.zipWithIndex.foreach { (byte, i) =>
-      byte ==> actual(i)
+      assertTrue(byte == actual(i))
     }
   }
 
   def testIntegerObject(expected: Long, actual: MObject): Unit = {
     actual match {
-      case i: MInteger => expected ==> i.value
+      case i: MInteger => assertTrue(expected == i.value)
       case _ => fail(s"object is not Integer. got=${actual.typeDesc()}")
     }
   }
 
   def testStringObject(expected: String, actual: MObject): Unit = {
     actual match {
-      case s: MString => expected ==> s.value
+      case s: MString => assertTrue(expected == s.value)
       case _          => fail(s"object is not String. got=${actual.typeDesc()}")
     }
   }

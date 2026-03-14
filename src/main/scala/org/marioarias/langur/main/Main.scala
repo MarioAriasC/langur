@@ -9,6 +9,7 @@ import org.marioarias.langur.repl.REPL
     case "eval-fast" => Benchmarks.evalFast()
     case "vm"        => Benchmarks.vmSlow()
     case "vm-fast"   => Benchmarks.vmFast()
+    case _           => println(s"Unknown parameter: $kind")
   }
 }
 

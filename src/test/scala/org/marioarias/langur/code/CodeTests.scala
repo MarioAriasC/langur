@@ -1,31 +1,33 @@
 package org.marioarias.langur.code
 
+import org.junit.Assert.assertTrue
+import org.junit.Test
 import org.marioarias.langur.*
 import org.marioarias.langur.utils.Utils.also
-import utest.{ArrowAssert, TestSuite, Tests, test}
+
 
 /** Created by IntelliJ IDEA.
   *
   * @author
   *   Mario Arias Date: 24/2/22 Time: 8:30 AM
   */
-object CodeTests extends TestSuite {
-  override def tests: Tests = Tests {
-    test("make") {
+object CodeTests  {
+  
+    @Test def `make `():Unit = {
       List(
         (OpConstant, Array(65534), Array(OpConstant, 255.u, 254.u)),
         (OpAdd, Array.emptyIntArray, Array(OpAdd)),
         (OpGetLocal, Array(255), Array(OpGetLocal, 255.u))
       ).foreach { case (op, operands, expected) =>
         val instructions = make(op, operands*)
-        expected.length ==> instructions.length
+        assertTrue(expected.length == instructions.length)
         expected.zipWithIndex.foreach { case (byte, i) =>
-          byte ==> instructions(i)
+          assertTrue(byte == instructions(i))
         }
       }
     }
 
-    test("instructions inspect") {
+    @Test def `instructions inspect`():Unit= {
       val instructions: List[Instructions] = List(
         make(OpAdd),
         make(OpGetLocal, 1),
@@ -41,10 +43,10 @@ object CodeTests extends TestSuite {
           |0009 OpClosure 65535 255
           |""".stripMargin
       val instruction: Instructions = instructions.concatInstructions
-      expected ==> instruction.inspect
+      assertTrue(expected == instruction.inspect)
     }
 
-    test("read operands") {
+    @Test def `read operands`():Unit = {
       List(
         (OpConstant, Array(65535), 2),
         (OpGetLocal, Array(255), 1),
@@ -55,9 +57,9 @@ object CodeTests extends TestSuite {
           val definition = lookup(op)
           readOperands(definition, instructions.offset(1)) match {
             case (operandsRead, read) =>
-              bytesRead ==> read
+              assertTrue(bytesRead == read)
               operands.zipWithIndex.foreach { case (expected, i) =>
-                expected ==> operandsRead(i)
+                assertTrue(expected == operandsRead(i))
               }
           }
         } catch {
@@ -120,4 +122,4 @@ object CodeTests extends TestSuite {
     }
     (operands, offset)
   }
-}
+
