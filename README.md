@@ -1,8 +1,8 @@
 # Langur
 
-A Scala 3 implementation of the [Monkey Language](https://monkeylang.org/)
+A GraalVM Scala 3 implementation of the [Monkey Language](https://monkeylang.org/)
 
-For the Scala Native implementation go to the [`scala-native-experiment` branch](https://github.com/MarioAriasC/langur/tree/scala-native-experiment)
+The Scala JVM version is on the [main branch](https://github.com/MarioAriasC/langur)
 
 Langur has 3 sibling implementations:
 
@@ -22,5 +22,8 @@ and [Writing A Compiler in Go](https://compilerbook.com/)) are implemented.
 | [`tests.sh`](tests.sh)           | Run all the tests                                                                                             |
 | [`build.sh`](build.sh)           | Release build                                                                                                 |
 | [`benchmarks.sh`](benchmarks.sh) | Run the classic monkey benchmark (`fibonacci(35)`), requires one command (`eval`,`eval-fast`,`vm`,`vm-fast`)) |
-| [`repl.sh`](repl.sh)             | Run the Langur REPL                                                                                           |
 
+
+## REPL
+
+The REPL for Langur GraalVM is currently  not working, we're working to fix it

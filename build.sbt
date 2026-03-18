@@ -1,6 +1,7 @@
 val scala3Version = "3.8.2"
 
 enablePlugins(JavaAppPackaging)
+enablePlugins(GraalVMNativeImagePlugin)
 
 lazy val root = project
   .in(file("."))
@@ -12,3 +13,5 @@ lazy val root = project
 
     testFrameworks += new TestFramework("utest.runner.Framework")
   )
+
+Compile / mainClass := Some("org.marioarias.langur.main.benchmark")
