@@ -3,7 +3,8 @@
 A Scala 3 implementation of the [Monkey Language](https://monkeylang.org/)
 
 For the Scala Native implementation, go to the [`scala-native-experiment` branch](https://github.com/MarioAriasC/langur/tree/scala-native-experiment)
-For the Scala Graal implementation, go to the [`scla-graalvm-experiment`](https://github.com/MarioAriasC/langur/tree/scala-graalvm-experiment)
+
+For the Scala Graal implementation, go to the [`scla-graalvm-experiment` branch](https://github.com/MarioAriasC/langur/tree/scala-graalvm-experiment)
 
 Langur has 3 sibling implementations:
 
