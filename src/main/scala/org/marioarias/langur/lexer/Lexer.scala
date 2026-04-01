@@ -50,7 +50,7 @@ class Lexer(input: String) {
       while (true) {
         readChar()
         if (ch == '"' || ch == zeroChar) {
-          break
+          break()
         }
       }
     }
@@ -125,7 +125,7 @@ class Lexer(input: String) {
   }
 
   extension (ch: Char) {
-    def isIdentifier: Boolean = ch.isLetter || ch == '_'
+    private def isIdentifier: Boolean = ch.isLetter || ch == '_'
   }
 
   extension (tokenType: TokenType) {
@@ -133,7 +133,7 @@ class Lexer(input: String) {
   }
 
   extension (value: String) {
-    def lookupIdent(): TokenType = {
+    private def lookupIdent(): TokenType = {
       TokenType.keywords.get(value) match {
         case Some(tokenType) => tokenType
         case None            => IDENT
@@ -146,6 +146,6 @@ class Lexer(input: String) {
 }
 
 object Lexer {
-  val whiteSpaces = List(' ', '\t', '\n', '\r')
+  val whiteSpaces: List[Char] = List(' ', '\t', '\n', '\r')
   val zeroChar: Char = 0.toChar
 }

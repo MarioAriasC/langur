@@ -12,7 +12,7 @@ import org.marioarias.langur.objects.{
   *   Mario Arias Date: 22/2/22 Time: 8:48 AM
   */
 object Builtins {
-  val builtins = Map(
+  val builtins: Map[String, Option[MBuiltinFunction]] = Map(
     "len" -> fns.getBuiltinByName("len"),
     "push" -> fns.getBuiltinByName("push"),
     "first" -> fns.getBuiltinByName("first"),

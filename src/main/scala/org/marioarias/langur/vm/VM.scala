@@ -366,7 +366,7 @@ class VM(
   def lastPoppedStackElem: Option[MObject] = stack(sp)
 
   extension (b: Boolean) {
-    def toMBoolean: MBoolean = if (b) {
+    private def toMBoolean: MBoolean = if (b) {
       True
     } else {
       False
@@ -397,10 +397,10 @@ class VM(
 }
 
 object VM {
-  inline val STACK_SIZE = 2048
-  inline val MAX_FRAME_SIZE = 1024
-  val True: MBoolean = MBoolean(true)
-  val False: MBoolean = MBoolean(false)
+  private inline val STACK_SIZE = 2048
+  private inline val MAX_FRAME_SIZE = 1024
+  private val True: MBoolean = MBoolean(true)
+  private val False: MBoolean = MBoolean(false)
   val Null: MNull.type = MNull
 }
 
