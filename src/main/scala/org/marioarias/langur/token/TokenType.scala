@@ -40,7 +40,7 @@ enum TokenType(val value: String) {
 }
 
 object TokenType {
-  val keywords = Map(
+  val keywords: Map[String, TokenType] = Map(
     "fn" -> FUNCTION,
     "let" -> LET,
     "true" -> TRUE,

@@ -3,7 +3,6 @@ package org.marioarias.langur.compiler
 import org.marioarias.langur.ast.*
 import org.marioarias.langur.code.*
 import org.marioarias.langur.objects.*
-import org.marioarias.langur.utils.Utils.also
 
 import scala.collection.mutable
 

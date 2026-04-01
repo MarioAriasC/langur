@@ -1,7 +1,6 @@
 package org.marioarias.langur.compiler
 
 import scala.collection.mutable
-import scala.collection.mutable.ListBuffer
 
 /** Created by IntelliJ IDEA.
   *

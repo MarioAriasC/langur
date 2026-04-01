@@ -20,7 +20,7 @@ import scala.collection.mutable
   *   Mario Arias Date: 4/3/22 Time: 12:34 PM
   */
 object REPL {
-  val MONKEY_FACE =
+  private val MONKEY_FACE =
     """            __,__
      .--.  .-"     "-.  .--.
     / .. \/  .-. .-.  \/ .. \
