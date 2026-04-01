@@ -50,7 +50,7 @@ class Lexer(input: String) {
       while (true) {
         readChar()
         if (ch == '"' || ch == zeroChar) {
-          break
+          break()
         }
       }
     }
